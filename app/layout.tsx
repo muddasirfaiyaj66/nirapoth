@@ -5,6 +5,11 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { BangladeshiBackground } from "@/components/bangladeshi-background";
+import { ReduxProvider } from "@/lib/providers/ReduxProvider";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { ConditionalLayout } from "@/components/ConditionalLayout";
+import { AuthInitializer } from "@/components/auth/AuthInitializer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -25,10 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} antialiased dark`}>
       <body className="bg-background text-foreground" suppressHydrationWarning>
-        <BangladeshiBackground />
-        <Header />
-        {children}
-        <Footer />
+        <ReduxProvider>
+          <QueryProvider>
+            <AuthInitializer>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </AuthInitializer>
+            <Toaster />
+          </QueryProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
