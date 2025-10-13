@@ -94,77 +94,85 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
 
     return [
       {
+        id: "total-cases",
         title: "Total Cases Filed",
         value: stats.totalViolations.toString(),
         change: { value: 12, type: "increase" as const },
         icon: FileText,
         description: "Auto + Manual + Citizen",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "cases"),
         trend: "up" as const,
       },
       {
+        id: "active-emergencies",
         title: "Active Emergencies",
         value: stats.totalIncidents.toString(),
         change: { value: 2, type: "decrease" as const },
         icon: AlertTriangle,
         description: "Accidents & Fire incidents",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "emergencies"),
         trend: "down" as const,
         badge: "Live",
       },
       {
+        id: "fine-collection",
         title: "Fine Collection",
         value: `৳${stats.totalRevenue.toLocaleString()}`,
         change: { value: 8, type: "increase" as const },
         icon: DollarSign,
         description: "Total revenue this month",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "revenue"),
         trend: "up" as const,
       },
       {
+        id: "ai-cameras",
         title: "AI Cameras Active",
         value: stats.activeCameras.toString(),
         change: { value: 2, type: "increase" as const },
         icon: Camera,
         description: "Monitoring 24/7",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "cameras"),
         trend: "up" as const,
       },
       {
+        id: "citizen-complaints",
         title: "Citizen Complaints",
         value: stats.totalComplaints.toString(),
         change: { value: 15, type: "increase" as const },
         icon: Users,
         description: "Traffic + Infrastructure",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "complaints"),
         trend: "up" as const,
       },
       {
-        title: "Blacklisted Drivers",
-        value: stats.blacklistedDrivers.toString(),
+        id: "restricted-citizens",
+        title: "Restricted Citizens",
+        value: stats.restrictedCitizens.toString(),
         change: { value: 3, type: "increase" as const },
         icon: Ban,
-        description: "Gems depleted",
-        sparklineData: generateSparklineData(),
+        description: "Driving restricted",
+        sparklineData: generateSparklineData(12, "restricted"),
         trend: "up" as const,
         badge: "Alert",
       },
       {
+        id: "pending-appeals",
         title: "Pending Appeals",
         value: stats.pendingAppeals.toString(),
         change: { value: 5, type: "decrease" as const },
         icon: Clock,
         description: "Fine removal requests",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "appeals"),
         trend: "down" as const,
       },
       {
+        id: "system-uptime",
         title: "System Uptime",
         value: `${stats.systemUptime}%`,
         change: { value: 0.2, type: "increase" as const },
         icon: Zap,
         description: "Last 30 days",
-        sparklineData: generateSparklineData(),
+        sparklineData: generateSparklineData(12, "uptime"),
         trend: "up" as const,
         badge: "Excellent",
       },
@@ -192,8 +200,9 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
     },
   ];
 
-  const generateSparklineData = (points = 12) => {
-    return Array.from({ length: points }, () => ({
+  const generateSparklineData = (points = 12, prefix = "point") => {
+    return Array.from({ length: points }, (_, index) => ({
+      id: `${prefix}-${index}`,
       value: Math.floor(Math.random() * 100) + 50,
     }));
   };
@@ -218,7 +227,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {roleStats.map((stat, index) => (
           <Card
-            key={index}
+            key={stat.id}
             className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm"
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -250,7 +259,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   <AreaChart data={stat.sparklineData}>
                     <defs>
                       <linearGradient
-                        id={`gradient-${index}`}
+                        id={`gradient-${stat.id}`}
                         x1="0"
                         y1="0"
                         x2="0"
@@ -273,7 +282,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                       dataKey="value"
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
-                      fill={`url(#gradient-${index})`}
+                      fill={`url(#gradient-${stat.id})`}
                       isAnimationActive={false}
                     />
                   </AreaChart>

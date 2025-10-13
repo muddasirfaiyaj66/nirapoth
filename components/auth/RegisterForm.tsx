@@ -16,13 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
@@ -39,12 +33,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: "CITIZEN",
+      role: "CITIZEN" as any,
     },
   });
 
@@ -128,27 +120,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             />
             {errors.phone && (
               <p className="text-sm text-red-500">{errors.phone.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={watch("role")}
-              onValueChange={(value) => setValue("role", value as any)}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CITIZEN">Citizen</SelectItem>
-                <SelectItem value="TRAFFIC_POLICE">Traffic Police</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.role && (
-              <p className="text-sm text-red-500">{errors.role.message}</p>
             )}
           </div>
 

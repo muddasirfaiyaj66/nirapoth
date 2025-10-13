@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserRole } from "../store/slices/authSlice";
 
 // User registration validation schema
 export const registerSchema = z
@@ -49,10 +50,7 @@ export const registerSchema = z
       .optional()
       .or(z.literal("")),
 
-    role: z
-      .enum(["CITIZEN", "TRAFFIC_POLICE", "ADMIN", "SUPER_ADMIN"])
-      .optional()
-      .default("CITIZEN"),
+    role: z.nativeEnum(UserRole).optional().default(UserRole.CITIZEN),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

@@ -8,6 +8,7 @@ import {
   resetPassword as resetPasswordAction,
   verifyEmail as verifyEmailAction,
   clearAuth,
+  UserRole,
   setLoading,
   setError,
 } from "../store/slices/authSlice";
@@ -38,7 +39,7 @@ export const useAuth = () => {
       phone: string;
       nidNo?: string;
       birthCertificateNo?: string;
-      role?: string;
+      role?: UserRole;
     }) => {
       try {
         await dispatch(registerAction(userData)).unwrap();
@@ -52,11 +53,12 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
+      // Clear auth state immediately to prevent any API calls during logout
+      dispatch(clearAuth());
       await dispatch(logoutAction()).unwrap();
       return { success: true };
     } catch (error: any) {
-      // Even if logout fails on server, clear local state
-      dispatch(clearAuth());
+      // Even if logout fails on server, local state is already cleared
       return { success: false, error: error };
     }
   }, [dispatch]);

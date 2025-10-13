@@ -5,7 +5,6 @@ import { authApi } from "../../api/auth";
 export enum UserRole {
   CITIZEN = "CITIZEN",
   POLICE = "POLICE",
-  DRIVER = "DRIVER",
   FIRE_SERVICE = "FIRE_SERVICE",
   ADMIN = "ADMIN",
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -142,6 +141,10 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
+        // Clear logout flag on successful login
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth_logged_out");
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -165,11 +168,29 @@ const authSlice = createSlice({
         state.error = action.error.message || "Registration failed";
         state.isAuthenticated = false;
       })
+      .addCase(logout.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        // Set flag to prevent further API calls during logout
+        if (typeof window !== "undefined") {
+          localStorage.setItem("auth_logged_out", "true");
+        }
+      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(logout.rejected, (state) => {
+        // Even if logout fails on server, clear local state
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.isAuthenticated = false;
+        state.isLoading = false;
         state.error = null;
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
@@ -213,8 +234,14 @@ export const logout = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
+      // Import and call resetApiState
+      const { resetApiState } = await import("../../api/auth");
+      resetApiState();
       return;
     } catch (error: any) {
+      // Even if logout fails, reset API state
+      const { resetApiState } = await import("../../api/auth");
+      resetApiState();
       return rejectWithValue(error.message || "Logout failed");
     }
   }

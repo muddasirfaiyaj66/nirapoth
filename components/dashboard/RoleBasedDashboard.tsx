@@ -46,7 +46,6 @@ export function RoleBasedDashboard() {
       return <PoliceDashboard user={user} />;
 
     case "CITIZEN":
-    case "DRIVER":
     case "FIRE_SERVICE":
       return <CitizenDashboard user={user} />;
 

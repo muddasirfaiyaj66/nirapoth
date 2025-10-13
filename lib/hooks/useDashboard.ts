@@ -13,8 +13,8 @@ export interface DashboardStats {
   activeCameras: number;
   pendingReports: number;
   resolvedReports: number;
-  driverGems: number;
-  blacklistedDrivers: number;
+  citizenGems: number;
+  restrictedCitizens: number;
   pendingAppeals: number;
   systemUptime: number;
 }

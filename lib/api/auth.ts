@@ -1,10 +1,9 @@
 import axios, { AxiosResponse } from "axios";
 
-// Define UserRole enum to match backend @prisma/client
+// Define UserRole enum to match backend
 export enum UserRole {
   CITIZEN = "CITIZEN",
   POLICE = "POLICE",
-  DRIVER = "DRIVER",
   FIRE_SERVICE = "FIRE_SERVICE",
   ADMIN = "ADMIN",
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -87,23 +86,84 @@ api.interceptors.request.use(
   }
 );
 
+// Track if we're currently refreshing to prevent multiple refresh attempts
+let isRefreshing = false;
+let isLoggingOut = false;
+let failedQueue: Array<{
+  resolve: (token?: any) => void;
+  reject: (error: any) => void;
+}> = [];
+
+// Process queued requests after refresh completes
+const processQueue = (error: any, token: any = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
+// Reset API state (call on logout)
+export const resetApiState = () => {
+  isRefreshing = false;
+  isLoggingOut = false;
+  failedQueue = [];
+};
+
 // Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't try to refresh for logout requests, refresh requests, or if we're logging out
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isLoggingOut &&
+      !originalRequest.url?.includes("/auth/logout") &&
+      !originalRequest.url?.includes("/auth/refresh")
+    ) {
+      // If we're already refreshing, add to queue
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         // Attempt to refresh token
         await api.post("/auth/refresh");
+        processQueue(null);
+        isRefreshing = false;
+
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
-        if (typeof window !== "undefined") {
+        processQueue(refreshError);
+        isRefreshing = false;
+
+        // Only redirect to login if we're in a browser environment
+        // and it's not a programmatic logout
+        if (
+          typeof window !== "undefined" &&
+          !window.location.pathname.includes("/login")
+        ) {
+          // Clear any auth state before redirecting
+          localStorage.removeItem("auth");
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);
@@ -146,7 +206,15 @@ export const authApi = {
 
   // Logout user
   logout: async (): Promise<void> => {
-    await api.post("/auth/logout");
+    try {
+      isLoggingOut = true;
+      await api.post("/auth/logout");
+    } finally {
+      isLoggingOut = false;
+      // Reset refresh state in case there were any pending refreshes
+      isRefreshing = false;
+      failedQueue = [];
+    }
   },
 
   // Get current user

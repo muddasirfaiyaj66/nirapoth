@@ -10,7 +10,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.52 0.12 155); /* Updated color scheme to match brand colors: Primary #398A58 (Green), Secondary #000000 (Black), Accent #1A3335 (Dark Green) */
+  --primary: oklch(0.52 0.12 155);
+  /* Updated color scheme to match brand colors: Primary #398A58 (Green), Secondary #000000 (Black), Accent #1A3335 (Dark Green) */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.145 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -37,13 +38,15 @@
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.52 0.12 155);
-  --font-inter: "Inter", sans-serif; /* Added Inter font definition */
+  --font-inter: "Inter", sans-serif;
+  /* Added Inter font definition */
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0 0); /* Dark mode colors with brand green as primary */
+  --card: oklch(0.18 0 0);
+  /* Dark mode colors with brand green as primary */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -76,9 +79,12 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter); /* Added Inter font configuration */
-  --font-serif: var(--font-serif); /* Optional: --font-serif if applied in layout.tsx */
-  --font-mono: var(--font-mono); /* Optional: --font-mono if applied in layout.tsx */
+  --font-sans: var(--font-inter);
+  /* Added Inter font configuration */
+  --font-serif: var(--font-serif);
+  /* Optional: --font-serif if applied in layout.tsx */
+  --font-mono: var(--font-mono);
+  /* Optional: --font-mono if applied in layout.tsx */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -121,18 +127,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
-    scroll-behavior: smooth; /* Added smooth scrolling for better UX */
+    scroll-behavior: smooth;
+    /* Added smooth scrolling for better UX */
   }
 }
 
 /* Added custom animations for matrix effect enhancement */
 @keyframes pulse-glow {
+
   0%,
   100% {
     opacity: 0.3;
   }
+
   50% {
     opacity: 0.6;
   }
@@ -142,6 +152,7 @@
   0% {
     transform: translateY(0);
   }
+
   100% {
     transform: translateY(20px);
   }
@@ -152,9 +163,11 @@
   0% {
     transform: translateX(0) translateY(0);
   }
+
   50% {
     transform: translateX(-25%) translateY(-5px);
   }
+
   100% {
     transform: translateX(-50%) translateY(0);
   }
@@ -164,9 +177,11 @@
   0% {
     transform: translateX(0) translateY(0);
   }
+
   50% {
     transform: translateX(-15%) translateY(5px);
   }
+
   100% {
     transform: translateX(-30%) translateY(0);
   }
@@ -178,4 +193,56 @@
 
 .animate-wave-slow {
   animation: wave-slow 20s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+}
+
+/* Custom scrollbar styles for sidebar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.3);
+}
+
+/* Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+}
+
+/* Hide scrollbars globally */
+.hide-scrollbar {
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Apply to all scrollable areas in dashboard */
+.dashboard-container {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+.dashboard-container::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }

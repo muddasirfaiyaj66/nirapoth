@@ -367,7 +367,8 @@ export function DashboardContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN ? (
+            {user.role === UserRole.ADMIN ||
+            user.role === UserRole.SUPER_ADMIN ? (
               <>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -469,7 +470,7 @@ export function DashboardContent() {
                   </div>
                 </div>
               </>
-            ) : (
+            ) : user.role === UserRole.CITIZEN ? (
               <>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                   <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -529,9 +530,7 @@ export function DashboardContent() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-sm font-medium">
-                        Complaint filed
-                      </h4>
+                      <h4 className="text-sm font-medium">Complaint filed</h4>
                       <Badge
                         variant="outline"
                         className="bg-blue-100 text-blue-800 border-blue-200"

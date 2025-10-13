@@ -31,6 +31,7 @@ import {
   Building2,
   Phone,
   Mail,
+  Ban,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -55,7 +56,7 @@ export function DashboardSidebar() {
         title: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        roles: ["ADMIN", "POLICE", "DRIVER", "FIRE_SERVICE", "CITIZEN"],
+        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
       },
     ];
 
@@ -67,68 +68,186 @@ export function DashboardSidebar() {
           {
             id: "users",
             title: "User Management",
-            href: "/admin/users",
+            href: "/dashboard/admin/users",
             icon: Users,
             roles: ["ADMIN", "SUPER_ADMIN"],
             children: [
               {
                 id: "all-users",
                 title: "All Users",
-                href: "/admin/users",
+                href: "/dashboard/admin/users",
                 icon: Users,
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
               {
                 id: "user-verification",
-                title: "Verification",
-                href: "/admin/verification",
+                title: "User Verification",
+                href: "/dashboard/admin/users/verification",
                 icon: UserCheck,
                 roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "user-roles",
+                title: "Role Management",
+                href: "/dashboard/admin/users/roles",
+                icon: Shield,
+                roles: ["SUPER_ADMIN"],
+              },
+              {
+                id: "blocked-users",
+                title: "Blocked Users",
+                href: "/dashboard/admin/users/blocked",
+                icon: Ban,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+            ],
+          },
+          {
+            id: "violations",
+            title: "Violations",
+            href: "/dashboard/admin/violations",
+            icon: Shield,
+            roles: ["ADMIN", "SUPER_ADMIN"],
+            children: [
+              {
+                id: "all-violations",
+                title: "All Violations",
+                href: "/dashboard/admin/violations",
+                icon: Shield,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "pending-violations",
+                title: "Pending Review",
+                href: "/dashboard/admin/violations/pending",
+                icon: AlertTriangle,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "violation-types",
+                title: "Violation Types",
+                href: "/dashboard/admin/violations/types",
+                icon: FileText,
+                roles: ["SUPER_ADMIN"],
               },
             ],
           },
           {
             id: "analytics",
             title: "Analytics",
-            href: "/admin/analytics",
+            href: "/dashboard/admin/analytics",
             icon: BarChart3,
             roles: ["ADMIN", "SUPER_ADMIN"],
             children: [
               {
                 id: "system-stats",
                 title: "System Statistics",
-                href: "/admin/analytics/system",
+                href: "/dashboard/admin/analytics/system",
                 icon: TrendingUp,
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
               {
                 id: "revenue",
                 title: "Revenue Reports",
-                href: "/admin/analytics/revenue",
+                href: "/dashboard/admin/analytics/revenue",
                 icon: CreditCard,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "traffic-analytics",
+                title: "Traffic Analytics",
+                href: "/dashboard/admin/analytics/traffic",
+                icon: Activity,
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
             ],
           },
           {
+            id: "police-management-admin",
+            title: "Police Management",
+            href: "/dashboard/police",
+            icon: Building2,
+            roles: ["ADMIN", "SUPER_ADMIN"],
+          },
+          {
             id: "system",
             title: "System Management",
-            href: "/admin/system",
+            href: "/dashboard/admin/system",
             icon: Settings,
             roles: ["ADMIN", "SUPER_ADMIN"],
             children: [
               {
                 id: "stations",
                 title: "Police Stations",
-                href: "/admin/stations",
+                href: "/dashboard/admin/system/stations",
                 icon: Building2,
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
               {
                 id: "cameras",
                 title: "Camera Network",
-                href: "/admin/cameras",
+                href: "/dashboard/admin/system/cameras",
                 icon: Camera,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "system-config",
+                title: "Configuration",
+                href: "/dashboard/admin/system/config",
+                icon: Settings,
+                roles: ["SUPER_ADMIN"],
+              },
+            ],
+          },
+          {
+            id: "complaints",
+            title: "Complaints",
+            href: "/dashboard/admin/complaints",
+            icon: FileText,
+            roles: ["ADMIN", "SUPER_ADMIN"],
+            children: [
+              {
+                id: "all-complaints",
+                title: "All Complaints",
+                href: "/dashboard/admin/complaints",
+                icon: FileText,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "pending-complaints",
+                title: "Pending",
+                href: "/dashboard/admin/complaints/pending",
+                icon: AlertTriangle,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+            ],
+          },
+          {
+            id: "finances",
+            title: "Financial Management",
+            href: "/dashboard/admin/finances",
+            icon: CreditCard,
+            roles: ["ADMIN", "SUPER_ADMIN"],
+            children: [
+              {
+                id: "fines",
+                title: "Fine Management",
+                href: "/dashboard/admin/finances/fines",
+                icon: CreditCard,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "revenue-tracking",
+                title: "Revenue Tracking",
+                href: "/dashboard/admin/finances/revenue",
+                icon: TrendingUp,
+                roles: ["ADMIN", "SUPER_ADMIN"],
+              },
+              {
+                id: "payment-disputes",
+                title: "Payment Disputes",
+                href: "/dashboard/admin/finances/disputes",
+                icon: AlertTriangle,
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
             ],
@@ -138,6 +257,13 @@ export function DashboardSidebar() {
 
       case "POLICE":
         baseItems.push(
+          {
+            id: "police-management",
+            title: "Police Management",
+            href: "/dashboard/police",
+            icon: Building2,
+            roles: ["POLICE"],
+          },
           {
             id: "violations",
             title: "Traffic Violations",
@@ -196,47 +322,6 @@ export function DashboardSidebar() {
         );
         break;
 
-      case "DRIVER":
-        baseItems.push(
-          {
-            id: "my-violations",
-            title: "My Violations",
-            href: "/driver/violations",
-            icon: Shield,
-            badge: "2",
-            roles: ["DRIVER"],
-          },
-          {
-            id: "my-vehicles",
-            title: "My Vehicles",
-            href: "/driver/vehicles",
-            icon: Car,
-            roles: ["DRIVER"],
-          },
-          {
-            id: "driver-gems",
-            title: "Driver Gems",
-            href: "/driver/gems",
-            icon: Activity,
-            roles: ["DRIVER"],
-          },
-          {
-            id: "payments",
-            title: "Payments",
-            href: "/driver/payments",
-            icon: CreditCard,
-            roles: ["DRIVER"],
-          },
-          {
-            id: "complaints",
-            title: "File Complaint",
-            href: "/driver/complaints",
-            icon: FileText,
-            roles: ["DRIVER"],
-          }
-        );
-        break;
-
       case "FIRE_SERVICE":
         baseItems.push(
           {
@@ -266,6 +351,72 @@ export function DashboardSidebar() {
 
       case "CITIZEN":
         baseItems.push(
+          {
+            id: "management",
+            title: "Management",
+            href: "/dashboard/management",
+            icon: Settings,
+            roles: ["CITIZEN"],
+            children: [
+              {
+                id: "driving-licenses",
+                title: "Driving Licenses",
+                href: "/dashboard/licenses",
+                icon: CreditCard,
+                roles: ["CITIZEN"],
+              },
+              {
+                id: "vehicle-assignments",
+                title: "Vehicle Assignments",
+                href: "/dashboard/vehicles",
+                icon: Car,
+                roles: ["CITIZEN"],
+              },
+              {
+                id: "user-profile",
+                title: "Profile Management",
+                href: "/profile",
+                icon: Users,
+                roles: ["CITIZEN"],
+              },
+            ],
+          },
+          {
+            id: "my-vehicles",
+            title: "My Vehicles",
+            href: "/citizen/vehicles",
+            icon: Car,
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "assigned-vehicles",
+            title: "Assigned Vehicles",
+            href: "/citizen/assigned-vehicles",
+            icon: Car,
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "my-violations",
+            title: "My Violations",
+            href: "/citizen/violations",
+            icon: Shield,
+            badge: "2",
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "citizen-gems",
+            title: "My Gems",
+            href: "/citizen/gems",
+            icon: Activity,
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "payments",
+            title: "Payments",
+            href: "/citizen/payments",
+            icon: CreditCard,
+            roles: ["CITIZEN"],
+          },
           {
             id: "file-complaint",
             title: "File Complaint",
@@ -306,14 +457,14 @@ export function DashboardSidebar() {
         href: "/notifications",
         icon: Bell,
         badge: "5",
-        roles: ["ADMIN", "POLICE", "DRIVER", "FIRE_SERVICE", "CITIZEN"],
+        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
       },
       {
         id: "profile",
         title: "Profile Settings",
         href: "/profile",
         icon: Settings,
-        roles: ["ADMIN", "POLICE", "DRIVER", "FIRE_SERVICE", "CITIZEN"],
+        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
       }
     );
 
@@ -342,15 +493,12 @@ export function DashboardSidebar() {
       <div className="flex items-center justify-between p-4 border-b">
         {!isCollapsed && (
           <Link href="/">
-          
-          <div className="flex items-center gap-2">
-            <div className=" rounded-lg flex items-center justify-center">
-              
+            <div className="flex items-center gap-2">
+              <div className=" rounded-lg flex items-center justify-center">
                 <img src="/logo.png" alt="Logo" className="w-10 h-10" />
-           
+              </div>
+              <span className="font-semibold">Nirapoth</span>
             </div>
-            <span className="font-semibold">Nirapoth</span>
-          </div>
           </Link>
         )}
         <Button
@@ -394,7 +542,7 @@ export function DashboardSidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className="flex-1 overflow-y-auto p-2 hide-scrollbar">
         <div className="space-y-1">
           {sidebarItems.map((item) => (
             <div key={item.id}>
