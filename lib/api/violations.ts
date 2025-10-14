@@ -165,6 +165,19 @@ export const violationApi = {
     return await api.post("/violations/rules", data);
   },
 
+  // Update rule (including toggle active status)
+  updateRule: async (
+    ruleId: string,
+    data: Partial<CreateRuleData> & { isActive?: boolean }
+  ) => {
+    return await api.put(`/violations/rules/${ruleId}`, data);
+  },
+
+  // Delete rule
+  deleteRule: async (ruleId: string) => {
+    return await api.delete(`/violations/rules/${ruleId}`);
+  },
+
   // Get violation statistics
   getViolationStats: async () => {
     return await api.get<ViolationStats>("/violations/stats");

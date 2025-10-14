@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminProtectedRoute } from "@/components/auth/AdminProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +24,60 @@ import {
   AlertTriangle,
   Clock,
   UserX,
+  Loader2,
 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
+import {
+  fetchBlockedUsers,
+  unblockUser,
+} from "@/lib/store/slices/adminUsersSlice";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export default function BlockedUsersPage() {
+  const dispatch = useAppDispatch();
+  const { toast } = useToast();
+  const {
+    blockedUsers,
+    loading,
+    totalBlockedUsers,
+    blockedCurrentPage,
+    blockedTotalPages,
+  } = useAppSelector((state) => state.adminUsers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    dispatch(fetchBlockedUsers({ page, limit: 10 }));
+  }, [dispatch, page]);
+
+  const handleUnblock = async (userId: string, userName: string) => {
+    try {
+      await dispatch(unblockUser(userId)).unwrap();
+      toast({
+        title: "Success",
+        description: `${userName} has been unblocked successfully`,
+      });
+      // Refresh the list
+      dispatch(fetchBlockedUsers({ page, limit: 10 }));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to unblock user",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredUsers = Array.isArray(blockedUsers)
+    ? blockedUsers.filter(
+        (user) =>
+          user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
+
   return (
     <ProtectedRoute>
       <AdminProtectedRoute>
@@ -42,7 +94,8 @@ export default function BlockedUsersPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="destructive" className="text-sm">
-                <Ban className="h-3 w-3 mr-1" />5 Blocked
+                <Ban className="h-3 w-3 mr-1" />
+                {totalBlockedUsers} Blocked
               </Badge>
             </div>
           </div>
@@ -62,6 +115,8 @@ export default function BlockedUsersPage() {
                       id="search"
                       placeholder="Search by name, email, or reason..."
                       className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
@@ -86,147 +141,113 @@ export default function BlockedUsersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Blocked By</TableHead>
-                    <TableHead>Blocked Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                          <UserX className="h-4 w-4 text-red-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium">John Smith</div>
-                          <div className="text-sm text-muted-foreground">
-                            ID: 12345
-                          </div>
-                        </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No blocked users found
+                </div>
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Blocked Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <UserX className="h-4 w-4 text-red-600" />
+                              </div>
+                              <div>
+                                <div className="font-medium">
+                                  {user.firstName} {user.lastName}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  ID: {user.id.slice(0, 8)}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.phone}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{user.role}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {user.blockedAt
+                              ? format(new Date(user.blockedAt), "PPP")
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="destructive">
+                              <Ban className="h-3 w-3 mr-1" />
+                              Blocked
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleUnblock(
+                                    user.id,
+                                    `${user.firstName} ${user.lastName}`
+                                  )
+                                }
+                                disabled={loading}
+                              >
+                                <Unlock className="h-4 w-4 mr-1" />
+                                Unblock
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {/* Pagination */}
+                  {blockedTotalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="text-sm text-muted-foreground">
+                        Page {blockedCurrentPage} of {blockedTotalPages}
                       </div>
-                    </TableCell>
-                    <TableCell>john.smith@email.com</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Fraudulent Activity
-                      </Badge>
-                    </TableCell>
-                    <TableCell>Admin User</TableCell>
-                    <TableCell>3 days ago</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">
-                        <Ban className="h-3 w-3 mr-1" />
-                        Permanently Blocked
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage(page - 1)}
+                          disabled={page === 1 || loading}
+                        >
+                          Previous
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <Unlock className="h-4 w-4 mr-1" />
-                          Unblock
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                          <UserX className="h-4 w-4 text-red-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Sarah Johnson</div>
-                          <div className="text-sm text-muted-foreground">
-                            ID: 12346
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>sarah.j@email.com</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Multiple Violations
-                      </Badge>
-                    </TableCell>
-                    <TableCell>Police Officer</TableCell>
-                    <TableCell>1 week ago</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Temporary Block
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Unlock className="h-4 w-4 mr-1" />
-                          Unblock
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                          <UserX className="h-4 w-4 text-red-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Mike Wilson</div>
-                          <div className="text-sm text-muted-foreground">
-                            ID: 12347
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>mike.w@email.com</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Spam Reports
-                      </Badge>
-                    </TableCell>
-                    <TableCell>System Admin</TableCell>
-                    <TableCell>2 weeks ago</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">
-                        <Ban className="h-3 w-3 mr-1" />
-                        Permanently Blocked
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Unlock className="h-4 w-4 mr-1" />
-                          Unblock
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage(page + 1)}
+                          disabled={page >= blockedTotalPages || loading}
+                        >
+                          Next
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

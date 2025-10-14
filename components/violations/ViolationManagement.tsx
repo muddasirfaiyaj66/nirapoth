@@ -57,13 +57,12 @@ export function ViolationManagement() {
   );
 
   // Form state
-  const [formData, setFormData] = useState<CreateViolationData>({
+  const [formData, setFormData] = useState({
     vehicleId: "",
     ruleId: "",
     description: "",
-    location: "",
-    fineAmount: 0,
-    status: "PENDING",
+    locationId: "",
+    evidenceUrl: "",
   });
 
   useEffect(() => {
@@ -95,9 +94,8 @@ export function ViolationManagement() {
           vehicleId: "",
           ruleId: "",
           description: "",
-          location: "",
-          fineAmount: 0,
-          status: "PENDING",
+          locationId: "",
+          evidenceUrl: "",
         });
         fetchViolations();
       }
@@ -124,9 +122,8 @@ export function ViolationManagement() {
           vehicleId: "",
           ruleId: "",
           description: "",
-          location: "",
-          fineAmount: 0,
-          status: "PENDING",
+          locationId: "",
+          evidenceUrl: "",
         });
         fetchViolations();
       }

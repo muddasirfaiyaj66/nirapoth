@@ -104,9 +104,8 @@ export function PoliceDashboard() {
     vehicleId: "",
     ruleId: "",
     description: "",
-    location: "",
-    fineAmount: 0,
-    status: "PENDING",
+    locationId: "",
+    evidenceUrl: "",
   });
 
   const [complaintFormData, setComplaintFormData] = useState({
@@ -177,9 +176,8 @@ export function PoliceDashboard() {
           vehicleId: "",
           ruleId: "",
           description: "",
-          location: "",
-          fineAmount: 0,
-          status: "PENDING",
+          locationId: "",
+          evidenceUrl: "",
         });
         fetchAllData();
       }

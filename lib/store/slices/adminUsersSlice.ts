@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { AdminApiService } from "@/lib/api/admin.api";
+import { adminApi } from "@/lib/api/admin";
 
 // Types
 export interface User {
@@ -24,13 +25,39 @@ export interface User {
   profileImage?: string;
 }
 
+export interface BlockedUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  isBlocked: boolean;
+  blockedAt: string;
+  blockedBy?: string;
+  blockReason?: string;
+  createdAt: string;
+}
+
+export interface RoleManagement {
+  role: string;
+  count: number;
+  description: string;
+  permissions: string[];
+}
+
 export interface UsersState {
   users: User[];
+  blockedUsers: BlockedUser[];
+  roles: RoleManagement[];
   loading: boolean;
   error: string | null;
   totalUsers: number;
+  totalBlockedUsers: number;
   currentPage: number;
   totalPages: number;
+  blockedCurrentPage: number;
+  blockedTotalPages: number;
   searchTerm: string;
   roleFilter: string;
   statusFilter: string;
@@ -38,11 +65,16 @@ export interface UsersState {
 
 const initialState: UsersState = {
   users: [],
+  blockedUsers: [],
+  roles: [],
   loading: false,
   error: null,
   totalUsers: 0,
+  totalBlockedUsers: 0,
   currentPage: 1,
   totalPages: 1,
+  blockedCurrentPage: 1,
+  blockedTotalPages: 1,
   searchTerm: "",
   roleFilter: "all",
   statusFilter: "all",
@@ -100,6 +132,33 @@ export const updateUserRole = createAsyncThunk(
   async ({ userId, newRole }: { userId: string; newRole: string }) => {
     const result = await AdminApiService.updateUserRole(userId, newRole);
     return { userId, newRole, result };
+  }
+);
+
+// Fetch blocked users
+export const fetchBlockedUsers = createAsyncThunk(
+  "admin/fetchBlockedUsers",
+  async (params?: { page?: number; limit?: number }) => {
+    const response = await adminApi.getBlockedUsers(params);
+    return response;
+  }
+);
+
+// Unblock user
+export const unblockUser = createAsyncThunk(
+  "admin/unblockUser",
+  async (userId: string) => {
+    const response = await adminApi.unblockUser(userId);
+    return { userId, response };
+  }
+);
+
+// Fetch role management
+export const fetchRoleManagement = createAsyncThunk(
+  "admin/fetchRoleManagement",
+  async () => {
+    const response = await adminApi.getRoleManagement();
+    return response;
   }
 );
 
@@ -206,6 +265,55 @@ const adminUsersSlice = createSlice({
       .addCase(updateUserRole.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to update user role";
+      })
+      // Fetch blocked users
+      .addCase(fetchBlockedUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBlockedUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        const data = action.payload?.data || action.payload;
+        state.blockedUsers = data?.users || [];
+        state.totalBlockedUsers = data?.pagination?.total || 0;
+        state.blockedCurrentPage = data?.pagination?.page || 1;
+        state.blockedTotalPages = data?.pagination?.pages || 1;
+      })
+      .addCase(fetchBlockedUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch blocked users";
+      })
+      // Unblock user
+      .addCase(unblockUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(unblockUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove user from blocked users list
+        state.blockedUsers = state.blockedUsers.filter(
+          (u) => u.id !== action.payload.userId
+        );
+        state.totalBlockedUsers -= 1;
+      })
+      .addCase(unblockUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to unblock user";
+      })
+      // Fetch role management
+      .addCase(fetchRoleManagement.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRoleManagement.fulfilled, (state, action) => {
+        state.loading = false;
+        state.roles = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
+      })
+      .addCase(fetchRoleManagement.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch role management";
       });
   },
 });
