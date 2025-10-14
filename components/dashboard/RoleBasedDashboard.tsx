@@ -7,7 +7,11 @@ import { CitizenDashboard } from "./role-based/CitizenDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
 
-export function RoleBasedDashboard() {
+export function RoleBasedDashboard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -36,34 +40,6 @@ export function RoleBasedDashboard() {
     );
   }
 
-  // Route to appropriate dashboard based on user role
-  switch (user.role) {
-    case "ADMIN":
-    case "SUPER_ADMIN":
-      return <AdminDashboard user={user} />;
-
-    case "POLICE":
-      return <PoliceDashboard user={user} />;
-
-    case "CITIZEN":
-    case "FIRE_SERVICE":
-      return <CitizenDashboard user={user} />;
-
-    default:
-      return (
-        <Card className="w-full max-w-md mx-auto mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Unknown Role
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Your role "{user.role}" is not recognized. Please contact support.
-            </p>
-          </CardContent>
-        </Card>
-      );
-  }
+  // Render children for authenticated users
+  return <>{children}</>;
 }

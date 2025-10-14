@@ -30,11 +30,43 @@ import {
   Briefcase,
   Calendar,
   Shield,
+  Camera,
+  Key,
+  Car,
+  Plus,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+  Upload,
+  Eye,
+  EyeOff,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
+import {
+  fetchProfile,
+  updateProfile,
+  fetchStatistics,
+  validateProfile,
+  changePassword,
+  uploadProfileImage,
+  clearError,
+  type UserProfile as ReduxUserProfile,
+} from "@/lib/store/slices/profileSlice";
 import { authFetch } from "@/lib/utils/api";
 
 interface UserProfile {
@@ -45,35 +77,113 @@ interface UserProfile {
   phone?: string;
   dateOfBirth?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
+  bloodGroup?: string;
   nationalId: string;
-  role: "CITIZEN" | "POLICE_OFFICER" | "ADMIN";
-
-  // Address Information
-  presentAddress?: string;
-  permanentAddress?: string;
-  city?: string;
-  district?: string;
-  postalCode?: string;
-
-  // Professional Information
-  occupation?: string;
-  designation?: string;
-  organization?: string;
-  workAddress?: string;
+  role: "CITIZEN" | "POLICE_OFFICER" | "ADMIN" | "FIRE_SERVICE";
 
   // Contact Information
+  alternatePhone?: string;
   emergencyContact?: string;
   emergencyContactPhone?: string;
+
+  // Present Address
+  presentAddress?: string;
+  presentCity?: string;
+  presentDistrict?: string;
+  presentDivision?: string;
+  presentPostalCode?: string;
+
+  // Permanent Address
+  permanentAddress?: string;
+  permanentCity?: string;
+  permanentDistrict?: string;
+  permanentDivision?: string;
+  permanentPostalCode?: string;
+
+  // Professional Information (for police/fire service)
+  designation?: string;
+  badgeNo?: string;
+  joiningDate?: string;
+  rank?: string;
+  specialization?: string;
 
   // Profile Status
   isActive: boolean;
   isVerified: boolean;
+  isEmailVerified: boolean;
+  isBlocked: boolean;
   createdAt: string;
   updatedAt: string;
 
   // Additional Profile Data
-  profilePicture?: string;
+  profileImage?: string;
   bio?: string;
+
+  // Related Data
+  citizenGem?: {
+    amount: number;
+    isRestricted: boolean;
+  };
+  drivingLicenses?: DrivingLicense[];
+  vehicleAssignments?: VehicleAssignment[];
+  vehiclesOwned?: Vehicle[];
+  station?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+}
+
+interface DrivingLicense {
+  id: string;
+  licenseNo: string;
+  category:
+    | "LIGHT_VEHICLE"
+    | "MOTORCYCLE"
+    | "LIGHT_VEHICLE_MOTORCYCLE"
+    | "HEAVY_VEHICLE"
+    | "PSV"
+    | "GOODS_VEHICLE";
+  issueDate: string;
+  expiryDate: string;
+  issuingAuthority: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface VehicleAssignment {
+  id: string;
+  vehicle: {
+    plateNo: string;
+    type: string;
+    brand: string;
+    model: string;
+  };
+  validUntil?: string;
+  isActive: boolean;
+}
+
+interface Vehicle {
+  id: string;
+  plateNo: string;
+  type: string;
+  brand: string;
+  model: string;
+}
+
+interface UserStatistics {
+  totalVehicles: number;
+  activeAssignments: number;
+  totalViolations: number;
+  gems: number;
+  isRestricted: boolean;
+  activeLicenses: number;
+}
+
+interface ProfileValidation {
+  isComplete: boolean;
+  missingFields: string[];
+  completionPercentage: number;
 }
 
 interface UpdateProfileFormData {
@@ -82,52 +192,117 @@ interface UpdateProfileFormData {
   phone: string;
   dateOfBirth: string;
   gender: string;
-
-  // Address Information
-  presentAddress: string;
-  permanentAddress: string;
-  city: string;
-  district: string;
-  postalCode: string;
-
-  // Professional Information
-  occupation: string;
-  designation: string;
-  organization: string;
-  workAddress: string;
+  bloodGroup: string;
 
   // Contact Information
+  alternatePhone: string;
   emergencyContact: string;
   emergencyContactPhone: string;
+
+  // Present Address
+  presentAddress: string;
+  presentCity: string;
+  presentDistrict: string;
+  presentDivision: string;
+  presentPostalCode: string;
+
+  // Permanent Address
+  permanentAddress: string;
+  permanentCity: string;
+  permanentDistrict: string;
+  permanentDivision: string;
+  permanentPostalCode: string;
+
+  // Professional Information (for police/fire service)
+  designation: string;
+  badgeNo: string;
+  joiningDate: string;
+  rank: string;
+  specialization: string;
 
   // Additional Info
   bio: string;
 }
 
+interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface LicenseFormData {
+  licenseNo: string;
+  category: string;
+  issueDate: string;
+  expiryDate: string;
+  issuingAuthority: string;
+}
+
 export function UserProfileManagement() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+
+  // Redux state
+  const {
+    profile,
+    statistics,
+    validation: profileValidation,
+    loading,
+    updateLoading: saving,
+    statisticsLoading,
+    validationLoading,
+    error,
+  } = useAppSelector((state) => state.profile);
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showLicenseDialog, setShowLicenseDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [formData, setFormData] = useState<UpdateProfileFormData>({
     firstName: "",
     lastName: "",
     phone: "",
     dateOfBirth: "",
     gender: "",
-    presentAddress: "",
-    permanentAddress: "",
-    city: "",
-    district: "",
-    postalCode: "",
-    occupation: "",
-    designation: "",
-    organization: "",
-    workAddress: "",
+    bloodGroup: "",
+    alternatePhone: "",
     emergencyContact: "",
     emergencyContactPhone: "",
+    presentAddress: "",
+    presentCity: "",
+    presentDistrict: "",
+    presentDivision: "",
+    presentPostalCode: "",
+    permanentAddress: "",
+    permanentCity: "",
+    permanentDistrict: "",
+    permanentDivision: "",
+    permanentPostalCode: "",
+    designation: "",
+    badgeNo: "",
+    joiningDate: "",
+    rank: "",
+    specialization: "",
     bio: "",
   });
+
+  const [passwordData, setPasswordData] = useState<PasswordChangeData>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [licenseData, setLicenseData] = useState<LicenseFormData>({
+    licenseNo: "",
+    category: "",
+    issueDate: "",
+    expiryDate: "",
+    issuingAuthority: "",
+  });
+
   const { toast } = useToast();
 
   const bangladeshiDistricts = [
@@ -198,8 +373,19 @@ export function UserProfileManagement() {
   ];
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Clear any existing errors
+    dispatch(clearError());
+
+    // Fetch profile data
+    dispatch(fetchProfile());
+    dispatch(fetchStatistics());
+    dispatch(validateProfile());
+  }, [dispatch, isAuthenticated, router]);
 
   const fetchProfile = async () => {
     try {
@@ -219,17 +405,27 @@ export function UserProfileManagement() {
             ? userProfile.dateOfBirth.split("T")[0]
             : "",
           gender: userProfile.gender || "",
-          presentAddress: userProfile.presentAddress || "",
-          permanentAddress: userProfile.permanentAddress || "",
-          city: userProfile.city || "",
-          district: userProfile.district || "",
-          postalCode: userProfile.postalCode || "",
-          occupation: userProfile.occupation || "",
-          designation: userProfile.designation || "",
-          organization: userProfile.organization || "",
-          workAddress: userProfile.workAddress || "",
+          bloodGroup: userProfile.bloodGroup || "",
+          alternatePhone: userProfile.alternatePhone || "",
           emergencyContact: userProfile.emergencyContact || "",
           emergencyContactPhone: userProfile.emergencyContactPhone || "",
+          presentAddress: userProfile.presentAddress || "",
+          presentCity: userProfile.presentCity || "",
+          presentDistrict: userProfile.presentDistrict || "",
+          presentDivision: userProfile.presentDivision || "",
+          presentPostalCode: userProfile.presentPostalCode || "",
+          permanentAddress: userProfile.permanentAddress || "",
+          permanentCity: userProfile.permanentCity || "",
+          permanentDistrict: userProfile.permanentDistrict || "",
+          permanentDivision: userProfile.permanentDivision || "",
+          permanentPostalCode: userProfile.permanentPostalCode || "",
+          designation: userProfile.designation || "",
+          badgeNo: userProfile.badgeNo || "",
+          joiningDate: userProfile.joiningDate
+            ? userProfile.joiningDate.split("T")[0]
+            : "",
+          rank: userProfile.rank || "",
+          specialization: userProfile.specialization || "",
           bio: userProfile.bio || "",
         });
       }
@@ -283,10 +479,170 @@ export function UserProfileManagement() {
     }
   };
 
+  const fetchStatistics = async () => {
+    try {
+      const response = await authFetch("profile/statistics");
+      if (response.ok) {
+        const data = await response.json();
+        setStatistics(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch statistics:", error);
+    }
+  };
+
+  const validateProfile = async () => {
+    try {
+      const response = await authFetch("profile/validate");
+      if (response.ok) {
+        const data = await response.json();
+        setProfileValidation(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to validate profile:", error);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await authFetch("profile/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(passwordData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Password changed successfully",
+        });
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setShowPasswordDialog(false);
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Failed to change password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddLicense = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await authFetch("profile/driving-licenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(licenseData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Driving license added successfully",
+        });
+        setLicenseData({
+          licenseNo: "",
+          category: "",
+          issueDate: "",
+          expiryDate: "",
+          issuingAuthority: "",
+        });
+        setShowLicenseDialog(false);
+        fetchProfile(); // Refresh profile to show new license
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add driving license",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUploadProfileImage = async (file: File) => {
+    try {
+      // Here you would typically upload to a cloud service like Cloudinary
+      // For now, we'll simulate the upload
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // This is a placeholder - implement actual image upload logic
+      const imageUrl = URL.createObjectURL(file);
+
+      const response = await authFetch("profile/upload-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Profile image updated successfully",
+        });
+        fetchProfile(); // Refresh profile to show new image
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to upload profile image",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload profile image",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCopyPresentToPermanent = () => {
     setFormData({
       ...formData,
       permanentAddress: formData.presentAddress,
+      permanentCity: formData.presentCity,
+      permanentDistrict: formData.presentDistrict,
+      permanentDivision: formData.presentDivision,
+      permanentPostalCode: formData.presentPostalCode,
     });
   };
 
@@ -296,12 +652,63 @@ export function UserProfileManagement() {
         return <Badge variant="destructive">Admin</Badge>;
       case "POLICE_OFFICER":
         return <Badge variant="default">Police Officer</Badge>;
+      case "FIRE_SERVICE":
+        return (
+          <Badge variant="default" className="bg-orange-500">
+            Fire Service
+          </Badge>
+        );
       case "CITIZEN":
         return <Badge variant="secondary">Citizen</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
   };
+
+  const getBloodGroupOptions = () => [
+    "A+",
+    "A-",
+    "B+",
+    "B-",
+    "AB+",
+    "AB-",
+    "O+",
+    "O-",
+  ];
+
+  const getLicenseCategoryOptions = () => [
+    { value: "LIGHT_VEHICLE", label: "Light Vehicle" },
+    { value: "MOTORCYCLE", label: "Motorcycle" },
+    { value: "LIGHT_VEHICLE_MOTORCYCLE", label: "Light Vehicle & Motorcycle" },
+    { value: "HEAVY_VEHICLE", label: "Heavy Vehicle" },
+    { value: "PSV", label: "Public Service Vehicle" },
+    { value: "GOODS_VEHICLE", label: "Goods Vehicle" },
+  ];
+
+  const getDivisionOptions = () => [
+    "Barisal",
+    "Chittagong",
+    "Dhaka",
+    "Khulna",
+    "Mymensingh",
+    "Rajshahi",
+    "Rangpur",
+    "Sylhet",
+  ];
+
+  const getRankOptions = () => [
+    "Constable",
+    "Head Constable",
+    "Assistant Sub-Inspector",
+    "Sub-Inspector",
+    "Inspector",
+    "Circle Inspector",
+    "Additional Superintendent",
+    "Superintendent",
+    "Deputy Commissioner",
+    "Additional Commissioner",
+    "Commissioner",
+  ];
 
   const getStatusBadges = (profile: UserProfile) => {
     return (
@@ -324,578 +731,189 @@ export function UserProfileManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="relative">
+          <div className="h-16 w-16 rounded-full border-4 border-border"></div>
+          <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        </div>
       </div>
     );
   }
 
-  if (!profile) {
+  // If not authenticated or no user, show login prompt
+  if (!isAuthenticated && !user) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">Profile not found</p>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-background p-6">
+        <Card className="max-w-2xl mx-auto backdrop-blur-xl bg-card/50 border-border/50">
+          <CardContent className="p-12 text-center space-y-6">
+            <div className="h-20 w-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="h-10 w-10 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold mb-2">
+                Authentication Required
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Please log in to access your profile and manage your
+                information.
+              </p>
+              <Button
+                onClick={() => router.push("/login")}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              >
+                Go to Login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Profile Management</h1>
-          <p className="text-muted-foreground">
-            Manage your personal information and settings
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {editing ? (
-            <>
-              <Button variant="outline" onClick={() => setEditing(false)}>
-                Cancel
-              </Button>
-              <Button form="profile-form" type="submit" disabled={saving}>
-                <Save className="mr-2 h-4 w-4" />
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setEditing(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Profile
+  // If authenticated but profile failed to load, show error
+  if (isAuthenticated && user && !profile && !loading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <Card className="max-w-2xl mx-auto backdrop-blur-xl bg-card/50 border-border/50">
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Profile not found</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Unable to load your profile information. Please try refreshing the
+              page.
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            >
+              Refresh Page
             </Button>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
 
-      {editing ? (
-        <form
-          id="profile-form"
-          onSubmit={handleUpdateProfile}
-          className="space-y-6"
-        >
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
-              <CardDescription>
-                Your personal details and identity information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
-                    required
-                  />
-                </div>
+  // Show main interface if authenticated and either loading or have profile data
+  if (isAuthenticated && user && profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Profile Management
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Manage your personal information and settings
+                </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dateOfBirth: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select
-                    value={formData.gender}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, gender: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MALE">Male</SelectItem>
-                      <SelectItem value="FEMALE">Female</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex gap-2">
+                {editing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditing(false)}
+                      className="backdrop-blur-sm bg-card/50 border-border/50 hover:bg-card/80 transition-all"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      form="profile-form"
+                      type="submit"
+                      disabled={saving}
+                      className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                    >
+                      <Save className="mr-2 h-4 w-4" />
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => setEditing(true)}
+                      className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await logout();
+                          router.push("/login");
+                        } catch (error) {
+                          console.error("Logout failed:", error);
+                          // Even if logout fails, redirect to login
+                          router.push("/login");
+                        }
+                      }}
+                      className="backdrop-blur-sm bg-card/50 border-border/50 hover:bg-card/80 transition-all"
+                    >
+                      Logout
+                    </Button>
+                  </>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={formData.bio}
-                  onChange={(e) =>
-                    setFormData({ ...formData, bio: e.target.value })
-                  }
-                  placeholder="Tell us about yourself..."
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </div>
 
-          {/* Address Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Address Information
-              </CardTitle>
-              <CardDescription>
-                Your residential and contact addresses
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="presentAddress">Present Address</Label>
-                <Textarea
-                  id="presentAddress"
-                  value={formData.presentAddress}
-                  onChange={(e) =>
-                    setFormData({ ...formData, presentAddress: e.target.value })
-                  }
-                  placeholder="Enter your current residential address..."
-                  rows={2}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="permanentAddress">Permanent Address</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyPresentToPermanent}
-                  >
-                    Copy Present Address
-                  </Button>
-                </div>
-                <Textarea
-                  id="permanentAddress"
-                  value={formData.permanentAddress}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      permanentAddress: e.target.value,
-                    })
-                  }
-                  placeholder="Enter your permanent address..."
-                  rows={2}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    placeholder="Enter city"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="district">District</Label>
-                  <Select
-                    value={formData.district}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, district: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {bangladeshiDistricts.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input
-                    id="postalCode"
-                    value={formData.postalCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, postalCode: e.target.value })
-                    }
-                    placeholder="Enter postal code"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Professional Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Professional Information
-              </CardTitle>
-              <CardDescription>
-                Your work and professional details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="occupation">Occupation</Label>
-                  <Input
-                    id="occupation"
-                    value={formData.occupation}
-                    onChange={(e) =>
-                      setFormData({ ...formData, occupation: e.target.value })
-                    }
-                    placeholder="Enter your occupation"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="designation">Designation</Label>
-                  <Input
-                    id="designation"
-                    value={formData.designation}
-                    onChange={(e) =>
-                      setFormData({ ...formData, designation: e.target.value })
-                    }
-                    placeholder="Enter your designation"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="organization">Organization</Label>
-                <Input
-                  id="organization"
-                  value={formData.organization}
-                  onChange={(e) =>
-                    setFormData({ ...formData, organization: e.target.value })
-                  }
-                  placeholder="Enter your organization name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="workAddress">Work Address</Label>
-                <Textarea
-                  id="workAddress"
-                  value={formData.workAddress}
-                  onChange={(e) =>
-                    setFormData({ ...formData, workAddress: e.target.value })
-                  }
-                  placeholder="Enter your workplace address..."
-                  rows={2}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Emergency Contact */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5" />
-                Emergency Contact
-              </CardTitle>
-              <CardDescription>
-                Contact person in case of emergency
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyContact">
-                    Emergency Contact Name
-                  </Label>
-                  <Input
-                    id="emergencyContact"
-                    value={formData.emergencyContact}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        emergencyContact: e.target.value,
-                      })
-                    }
-                    placeholder="Enter emergency contact name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyContactPhone">
-                    Emergency Contact Phone
-                  </Label>
-                  <Input
-                    id="emergencyContactPhone"
-                    type="tel"
-                    value={formData.emergencyContactPhone}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        emergencyContactPhone: e.target.value,
-                      })
-                    }
-                    placeholder="Enter emergency contact phone"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-      ) : (
-        <div className="space-y-6">
-          {/* Profile Header */}
-          <Card>
-            <CardContent className="pt-6">
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+          <Card className="backdrop-blur-xl bg-card/50 border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
+            <CardContent className="pt-8 relative">
               <div className="flex items-start gap-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={profile.profilePicture} />
-                  <AvatarFallback className="text-lg">
-                    {profile.firstName.charAt(0)}
-                    {profile.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-2xl font-bold">
+                <div className="relative">
+                  <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-xl shadow-primary/10">
+                    <AvatarImage
+                      src={profile.profileImage || "/placeholder.svg"}
+                    />
+                    <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                      {profile.firstName.charAt(0)}
+                      {profile.lastName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                       {profile.firstName} {profile.lastName}
                     </h2>
                     {getRoleBadge(profile.role)}
                     {getStatusBadges(profile)}
                   </div>
-                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
+                  <div className="flex items-center gap-6 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Mail className="h-4 w-4 text-primary" />
+                      </div>
                       {profile.email}
                     </div>
                     {profile.phone && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-4 w-4" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <Phone className="h-4 w-4 text-accent" />
+                        </div>
                         {profile.phone}
                       </div>
                     )}
                   </div>
                   {profile.bio && (
-                    <p className="text-muted-foreground">{profile.bio}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="text-muted-foreground">National ID</Label>
-                  <p className="font-medium">{profile.nationalId}</p>
-                </div>
-                {profile.dateOfBirth && (
-                  <div>
-                    <Label className="text-muted-foreground">
-                      Date of Birth
-                    </Label>
-                    <p className="font-medium">
-                      {new Date(profile.dateOfBirth).toLocaleDateString()}
+                    <p className="text-muted-foreground leading-relaxed max-w-2xl">
+                      {profile.bio}
                     </p>
-                  </div>
-                )}
-                {profile.gender && (
-                  <div>
-                    <Label className="text-muted-foreground">Gender</Label>
-                    <p className="font-medium">{profile.gender}</p>
-                  </div>
-                )}
-                <div>
-                  <Label className="text-muted-foreground">Member Since</Label>
-                  <p className="font-medium">
-                    {new Date(profile.createdAt).toLocaleDateString()}
-                  </p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Address Information */}
-          {(profile.presentAddress || profile.permanentAddress) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Address Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {profile.presentAddress && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Present Address
-                      </Label>
-                      <p className="font-medium">{profile.presentAddress}</p>
-                    </div>
-                  )}
-                  {profile.permanentAddress && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Permanent Address
-                      </Label>
-                      <p className="font-medium">{profile.permanentAddress}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {profile.city && (
-                    <div>
-                      <Label className="text-muted-foreground">City</Label>
-                      <p className="font-medium">{profile.city}</p>
-                    </div>
-                  )}
-                  {profile.district && (
-                    <div>
-                      <Label className="text-muted-foreground">District</Label>
-                      <p className="font-medium">{profile.district}</p>
-                    </div>
-                  )}
-                  {profile.postalCode && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Postal Code
-                      </Label>
-                      <p className="font-medium">{profile.postalCode}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Professional Information */}
-          {(profile.occupation ||
-            profile.designation ||
-            profile.organization) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Professional Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {profile.occupation && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Occupation
-                      </Label>
-                      <p className="font-medium">{profile.occupation}</p>
-                    </div>
-                  )}
-                  {profile.designation && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Designation
-                      </Label>
-                      <p className="font-medium">{profile.designation}</p>
-                    </div>
-                  )}
-                </div>
-                {profile.organization && (
-                  <div>
-                    <Label className="text-muted-foreground">
-                      Organization
-                    </Label>
-                    <p className="font-medium">{profile.organization}</p>
-                  </div>
-                )}
-                {profile.workAddress && (
-                  <div>
-                    <Label className="text-muted-foreground">
-                      Work Address
-                    </Label>
-                    <p className="font-medium">{profile.workAddress}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Emergency Contact */}
-          {(profile.emergencyContact || profile.emergencyContactPhone) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  Emergency Contact
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {profile.emergencyContact && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Contact Name
-                      </Label>
-                      <p className="font-medium">{profile.emergencyContact}</p>
-                    </div>
-                  )}
-                  {profile.emergencyContactPhone && (
-                    <div>
-                      <Label className="text-muted-foreground">
-                        Contact Phone
-                      </Label>
-                      <p className="font-medium">
-                        {profile.emergencyContactPhone}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  return null;
 }

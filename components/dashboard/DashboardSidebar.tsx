@@ -390,8 +390,8 @@ export function DashboardSidebar() {
           },
           {
             id: "assigned-vehicles",
-            title: "Assigned Vehicles",
-            href: "/citizen/assigned-vehicles",
+            title: "Vehicle Assignments",
+            href: "/dashboard/vehicles",
             icon: Car,
             roles: ["CITIZEN"],
           },
@@ -413,7 +413,7 @@ export function DashboardSidebar() {
           {
             id: "payments",
             title: "Payments",
-            href: "/citizen/payments",
+            href: "/dashboard/payments",
             icon: CreditCard,
             roles: ["CITIZEN"],
           },
@@ -427,7 +427,7 @@ export function DashboardSidebar() {
           {
             id: "my-complaints",
             title: "My Complaints",
-            href: "/citizen/complaints",
+            href: "/dashboard/complaints",
             icon: FileText,
             roles: ["CITIZEN"],
           },

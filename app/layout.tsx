@@ -10,6 +10,8 @@ import { QueryProvider } from "@/lib/providers/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
+import { ErrorBoundaryProvider } from "@/components/providers/ErrorBoundaryProvider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -28,16 +30,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} antialiased dark`}>
+    <html
+      lang="en"
+      className={`${inter.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <body className="bg-background text-foreground" suppressHydrationWarning>
-        <ReduxProvider>
-          <QueryProvider>
-            <AuthInitializer>
-              <ConditionalLayout>{children}</ConditionalLayout>
-            </AuthInitializer>
-            <Toaster />
-          </QueryProvider>
-        </ReduxProvider>
+        <ErrorBoundaryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ReduxProvider>
+              <QueryProvider>
+                <AuthInitializer>
+                  <ConditionalLayout>{children}</ConditionalLayout>
+                </AuthInitializer>
+                <Toaster />
+              </QueryProvider>
+            </ReduxProvider>
+          </ThemeProvider>
+        </ErrorBoundaryProvider>
       </body>
     </html>
   );

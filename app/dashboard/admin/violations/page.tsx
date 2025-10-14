@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { authFetch } from "@/lib/utils/api";
+import { adminApi } from "@/lib/api/admin";
 
 interface Violation {
   id: string;
@@ -98,26 +98,13 @@ export default function AdminViolationsPage() {
       methodFilter,
     ],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "10",
+      return adminApi.getViolations({
+        page,
+        limit: 10,
         ...(searchTerm && { search: searchTerm }),
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(methodFilter !== "all" && { method: methodFilter }),
       });
-
-      const response = await fetch(`/api/admin/violations?${params}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch violations");
-      }
-
-      return response.json();
     },
   });
 
@@ -130,19 +117,7 @@ export default function AdminViolationsPage() {
       violationId: string;
       status: string;
     }) => {
-      const response = await authFetch("admin/violations/update-status", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ violationId, status }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update violation status");
-      }
-
-      return response.json();
+      return adminApi.updateViolationStatus(violationId, status);
     },
     onSuccess: () => {
       toast.success("Violation status updated successfully");
@@ -167,7 +142,7 @@ export default function AdminViolationsPage() {
       case "DISPUTED":
         return "bg-red-500/10 text-red-600 border-red-500/20";
       case "RESOLVED":
-        return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+        return "bg-blue-500/10 text-green-600 border-blue-500/20";
       default:
         return "bg-gray-500/10 text-gray-600 border-gray-500/20";
     }

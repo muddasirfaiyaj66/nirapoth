@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, User, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,19 +23,27 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/logo.png"
-            alt="NiraPoth"
-            width={40}
-            height={40}
-            className="h-10 w-10"
-          />
-          <span className="text-xl font-bold">
-            NiraPoth <span className="text-muted-foreground">নিরাপথ</span>
-          </span>
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative">
+            <Image
+              src="/logo.png"
+              alt="NiraPoth"
+              width={40}
+              height={40}
+              className="h-10 w-10 transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-green-gradient">
+              NiraPoth
+            </span>
+            <span className="text-lg text-muted-foreground font-medium">
+              নিরাপথ
+            </span>
+          </div>
         </Link>
 
         <button
@@ -47,19 +56,19 @@ export function Header() {
 
         <nav className="hidden items-center gap-6 md:flex">
           <Link
-            href="#features"
+            href="/#features"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Features
           </Link>
           <Link
-            href="#how-it-works"
+            href="/#how-it-works"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             How It Works
           </Link>
           <Link
-            href="#stakeholders"
+            href="/#stakeholders"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             For Stakeholders
@@ -70,6 +79,7 @@ export function Header() {
           >
             Traffic Maps
           </Link>
+          <ThemeToggle />
           {isAuthenticated && user ? (
             <DropdownMenu
               open={dropdownOpen}
@@ -114,7 +124,7 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link
@@ -157,7 +167,7 @@ export function Header() {
               <Link href="/signup">
                 <Button
                   size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-green-gradient text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   Get Started
                 </Button>
@@ -171,21 +181,21 @@ export function Header() {
         <div className="border-t border-border bg-background md:hidden">
           <nav className="container mx-auto flex flex-col gap-4 px-4 py-4">
             <Link
-              href="#features"
+              href="/#features"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
-              href="#how-it-works"
+              href="/#how-it-works"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link
-              href="#stakeholders"
+              href="/#stakeholders"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -276,7 +286,7 @@ export function Header() {
                 <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     size="sm"
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="w-full bg-green-gradient text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-md hover:shadow-lg transition-all duration-300"
                   >
                     Get Started
                   </Button>

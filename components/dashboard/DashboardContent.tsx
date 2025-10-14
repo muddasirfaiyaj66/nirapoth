@@ -69,7 +69,7 @@ export function DashboardContent() {
             change: { value: 12, type: "increase" as const },
             icon: Users,
             description: "Registered users in the system",
-            color: "text-blue-600",
+            color: "text-green-600",
           },
           {
             title: "System Revenue",
@@ -130,7 +130,7 @@ export function DashboardContent() {
             change: { value: 1, type: "increase" as const },
             icon: Camera,
             description: "Active monitoring cameras",
-            color: "text-blue-600",
+            color: "text-green-600",
           },
         ];
 
@@ -142,7 +142,7 @@ export function DashboardContent() {
             change: { value: 2, type: "increase" as const },
             icon: FileText,
             description: "Complaints you've submitted",
-            color: "text-blue-600",
+            color: "text-green-600",
           },
           {
             title: "Resolved Issues",
@@ -186,7 +186,7 @@ export function DashboardContent() {
             description: "View and manage all users",
             icon: Users,
             href: "/admin/users",
-            color: "bg-blue-100 text-blue-600",
+            color: "bg-green-100 text-green-600",
           },
           {
             title: "System Analytics",
@@ -225,7 +225,7 @@ export function DashboardContent() {
             description: "Monitor traffic cameras",
             icon: Camera,
             href: "/police/cameras",
-            color: "bg-blue-100 text-blue-600",
+            color: "bg-green-100 text-green-600",
           },
         ];
 
@@ -236,7 +236,7 @@ export function DashboardContent() {
             description: "Report traffic issues",
             icon: FileText,
             href: "/citizen/complaints/new",
-            color: "bg-blue-100 text-blue-600",
+            color: "bg-green-100 text-green-600",
           },
           {
             title: "Traffic Maps",
@@ -371,8 +371,8 @@ export function DashboardContent() {
             user.role === UserRole.SUPER_ADMIN ? (
               <>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-green-600" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -456,7 +456,7 @@ export function DashboardContent() {
                       </h4>
                       <Badge
                         variant="outline"
-                        className="bg-blue-100 text-blue-800 border-blue-200"
+                        className="bg-green-100 text-green-800 border-green-200"
                       >
                         in progress
                       </Badge>
@@ -525,15 +525,15 @@ export function DashboardContent() {
               // For Citizens and other roles
               <>
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-green-600" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-sm font-medium">Complaint filed</h4>
                       <Badge
                         variant="outline"
-                        className="bg-blue-100 text-blue-800 border-blue-200"
+                        className="bg-green-100 text-green-800 border-green-200"
                       >
                         submitted
                       </Badge>

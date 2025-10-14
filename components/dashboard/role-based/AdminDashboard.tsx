@@ -359,7 +359,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                           ? "bg-red-500/10"
                           : emergency.severity === "High"
                           ? "bg-yellow-500/10"
-                          : "bg-blue-500/10"
+                          : "bg-green-500/10"
                       }`}
                     >
                       {emergency.type === "Fire" ? (
@@ -371,7 +371,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                               ? "text-red-500"
                               : emergency.severity === "High"
                               ? "text-yellow-500"
-                              : "text-blue-500"
+                              : "text-green-500"
                           }`}
                         />
                       )}
@@ -388,7 +388,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                               ? "bg-red-500/10 text-red-600 border-red-500/20"
                               : emergency.severity === "High"
                               ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
-                              : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                              : "bg-green-500/10 text-green-600 border-green-500/20"
                           }`}
                         >
                           {emergency.severity}
@@ -407,7 +407,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                         emergency.status === "Active"
                           ? "bg-red-500/10 text-red-600 border-red-500/20"
                           : emergency.status === "Dispatched"
-                          ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                          ? "bg-green-500/10 text-green-600 border-green-500/20"
                           : "bg-green-500/10 text-green-600 border-green-500/20"
                       }`}
                     >

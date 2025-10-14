@@ -487,15 +487,15 @@ export function CitizenDashboard({ user }: CitizenDashboardProps) {
               </div>
             </div>
             <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                <MapPin className="h-5 w-5 text-blue-500" />
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="h-5 w-5 text-green-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="text-sm font-semibold">Traffic checked</h4>
                   <Badge
                     variant="outline"
-                    className="bg-blue-500/10 text-blue-600 border-blue-500/20"
+                    className="bg-green-500/10 text-green-600 border-green-500/20"
                   >
                     Low Traffic
                   </Badge>

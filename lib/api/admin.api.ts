@@ -175,6 +175,30 @@ export class AdminApiService {
     });
   }
 
+  static async verifyUser(userId: string, verified: boolean) {
+    return ApiClient.post(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/verify`, {
+      userId,
+      verified,
+    });
+  }
+
+  static async unblockUser(userId: string) {
+    return ApiClient.post(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/unblock`, {
+      userId,
+    });
+  }
+
+  static async getVerifications(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
+    return ApiClient.get(
+      `${API_CONFIG.ENDPOINTS.ADMIN_USERS}/verifications`,
+      params
+    );
+  }
+
   // Violation Management
   static async getViolations(params?: {
     page?: number;

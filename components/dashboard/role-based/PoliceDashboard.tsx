@@ -591,7 +591,7 @@ export function PoliceDashboard({ user }: PoliceDashboardProps) {
                   </h4>
                   <Badge
                     variant="outline"
-                    className="bg-blue-500/10 text-blue-600 border-blue-500/20"
+                    className="bg-green-500/10 text-green-600 border-green-500/20"
                   >
                     In Progress
                   </Badge>

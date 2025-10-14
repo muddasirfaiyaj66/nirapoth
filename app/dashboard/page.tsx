@@ -1,12 +1,12 @@
 "use client";
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { RoleBasedDashboard } from "@/components/dashboard/RoleBasedDashboard";
+import { RoleBasedRouter } from "@/components/dashboard/RoleBasedRouter";
+import { AdvancedDashboard } from "@/components/dashboard/AdvancedDashboard";
 
 export default function DashboardPage() {
   return (
-    <ProtectedRoute>
-      <RoleBasedDashboard />
-    </ProtectedRoute>
+    <RoleBasedRouter>
+      <AdvancedDashboard />
+    </RoleBasedRouter>
   );
 }

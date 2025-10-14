@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import { api, resetApiState } from "./apiClient";
 
 // Define UserRole enum to match backend
 export enum UserRole {
@@ -66,217 +66,83 @@ export interface ApiResponse<T = any> {
   errors?: string[];
 }
 
-// Create axios instance with base configuration
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api",
-  withCredentials: true, // Important for httpOnly cookies
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Request interceptor to add auth token if available
-api.interceptors.request.use(
-  (config) => {
-    // Token will be handled by httpOnly cookies, but we can add other headers here
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Track if we're currently refreshing to prevent multiple refresh attempts
-let isRefreshing = false;
-let isLoggingOut = false;
-let failedQueue: Array<{
-  resolve: (token?: any) => void;
-  reject: (error: any) => void;
-}> = [];
-
-// Process queued requests after refresh completes
-const processQueue = (error: any, token: any = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
-// Reset API state (call on logout)
-export const resetApiState = () => {
-  isRefreshing = false;
-  isLoggingOut = false;
-  failedQueue = [];
-};
-
-// Response interceptor to handle token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Don't try to refresh for logout requests, refresh requests, or if we're logging out
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !isLoggingOut &&
-      !originalRequest.url?.includes("/auth/logout") &&
-      !originalRequest.url?.includes("/auth/refresh")
-    ) {
-      // If we're already refreshing, add to queue
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return api(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Attempt to refresh token
-        await api.post("/auth/refresh");
-        processQueue(null);
-        isRefreshing = false;
-
-        // Retry the original request
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
-        isRefreshing = false;
-
-        // Only redirect to login if we're in a browser environment
-        // and it's not a programmatic logout
-        if (
-          typeof window !== "undefined" &&
-          !window.location.pathname.includes("/login")
-        ) {
-          // Clear any auth state before redirecting
-          localStorage.removeItem("auth");
-          window.location.href = "/login";
-        }
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
 // Auth API functions
 export const authApi = {
   // Register user
-  register: async (userData: RegisterData): Promise<AuthResponse> => {
-    const response: AxiosResponse<ApiResponse<AuthResponse>> = await api.post(
-      "/auth/register",
-      userData
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  register: async (userData: RegisterData) => {
+    const response = await api.post<AuthResponse>("/auth/register", userData);
+    if (!response.success) {
+      throw new Error(response.error?.message || "Registration failed");
     }
-
-    return response.data.data!;
+    return response.data!;
   },
 
   // Login user
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response: AxiosResponse<ApiResponse<AuthResponse>> = await api.post(
-      "/auth/login",
-      credentials
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  login: async (credentials: LoginCredentials) => {
+    const response = await api.post<AuthResponse>("/auth/login", credentials);
+    if (!response.success) {
+      throw new Error(response.error?.message || "Login failed");
     }
-
-    return response.data.data!;
+    return response.data!;
   },
 
   // Logout user
-  logout: async (): Promise<void> => {
-    try {
-      isLoggingOut = true;
-      await api.post("/auth/logout");
-    } finally {
-      isLoggingOut = false;
-      // Reset refresh state in case there were any pending refreshes
-      isRefreshing = false;
-      failedQueue = [];
-    }
+  logout: async () => {
+    const response = await api.post("/auth/logout");
+    resetApiState();
+    return response;
   },
 
   // Get current user
-  getCurrentUser: async (): Promise<UserProfile> => {
-    const response: AxiosResponse<ApiResponse<{ user: UserProfile }>> =
-      await api.get("/auth/me");
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  getCurrentUser: async () => {
+    const response = await api.get<{ user: UserProfile }>("/auth/me");
+    if (!response.success) {
+      throw new Error(response.error?.message || "Failed to get user");
     }
-
-    return response.data.data!.user;
+    return response.data!.user;
   },
 
   // Refresh token
-  refreshToken: async (): Promise<AuthResponse> => {
-    const response: AxiosResponse<ApiResponse<AuthResponse>> = await api.post(
-      "/auth/refresh"
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  refreshToken: async () => {
+    const response = await api.post<AuthResponse>("/auth/refresh");
+    if (!response.success) {
+      throw new Error(response.error?.message || "Token refresh failed");
     }
-
-    return response.data.data!;
+    return response.data!;
   },
 
   // Forgot password
-  forgotPassword: async (data: ForgotPasswordData): Promise<void> => {
-    const response: AxiosResponse<ApiResponse> = await api.post(
-      "/auth/forgot-password",
-      data
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  forgotPassword: async (data: ForgotPasswordData) => {
+    const response = await api.post("/auth/forgot-password", data);
+    if (!response.success) {
+      throw new Error(response.error?.message || "Failed to send reset email");
     }
+    return response;
   },
 
   // Reset password
-  resetPassword: async (data: ResetPasswordData): Promise<UserProfile> => {
-    const response: AxiosResponse<ApiResponse<{ user: UserProfile }>> =
-      await api.post("/auth/reset-password", data);
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  resetPassword: async (data: ResetPasswordData) => {
+    const response = await api.post<{ user: UserProfile }>(
+      "/auth/reset-password",
+      data
+    );
+    if (!response.success) {
+      throw new Error(response.error?.message || "Password reset failed");
     }
-
-    return response.data.data!.user;
+    return response.data!.user;
   },
 
   // Verify email
-  verifyEmail: async (token: string): Promise<UserProfile> => {
-    const response: AxiosResponse<ApiResponse<{ user: UserProfile }>> =
-      await api.get(`/auth/verify-email?token=${token}`);
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+  verifyEmail: async (token: string) => {
+    const response = await api.get<{ user: UserProfile }>(
+      `/auth/verify-email?token=${token}`
+    );
+    if (!response.success) {
+      throw new Error(response.error?.message || "Email verification failed");
     }
-
-    return response.data.data!.user;
+    return response.data!.user;
   },
 };
 
+export { resetApiState };
 export default api;

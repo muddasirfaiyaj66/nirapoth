@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Shield } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Shield } from "lucide-react";
 
 export function Hero() {
   return (
@@ -13,19 +13,24 @@ export function Hero() {
             <span>AI-Powered Road Safety Platform</span>
           </div>
 
-          <h1 className="mb-6 text-balance text-5xl font-bold leading-tight tracking-tight md:text-7xl">
-            Making Roads Safer Through <span className="text-primary">Technology</span> and{" "}
-            <span className="text-primary">Transparency</span>
+          <h1 className="mb-6 text-balance text-5xl font-bold leading-tight tracking-tight md:text-7xl text-white">
+            Making Roads Safer Through{" "}
+            <span className="text-green-gradient">Technology</span> and{" "}
+            <span className="text-green-gradient">Transparency</span>
           </h1>
 
           <p className="mb-10 text-pretty text-lg text-muted-foreground md:text-xl">
-            NiraPoth combines AI-powered monitoring, citizen participation, and digital enforcement to create safer
-            roads for everyone. Real-time accident detection, automated violation tracking, and transparent
+            NiraPoth combines AI-powered monitoring, citizen participation, and
+            digital enforcement to create safer roads for everyone. Real-time
+            accident detection, automated violation tracking, and transparent
             accountability.
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -46,5 +51,5 @@ export function Hero() {
         </div>
       </div>
     </section>
-  )
+  );
 }
