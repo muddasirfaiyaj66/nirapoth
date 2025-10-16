@@ -7,6 +7,7 @@ import { Menu, User, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +81,7 @@ export function Header() {
             Traffic Maps
           </Link>
           <ThemeToggle />
+          {isAuthenticated && user && <NotificationDropdown />}
           {isAuthenticated && user ? (
             <DropdownMenu
               open={dropdownOpen}

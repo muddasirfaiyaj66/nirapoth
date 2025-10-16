@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Select,
   SelectContent,
@@ -137,6 +138,26 @@ export default function AdminAnalyticsPage() {
           <p className="text-muted-foreground">
             Comprehensive system performance metrics and insights
           </p>
+          <div className="mt-4 flex gap-2">
+            <Link href="/dashboard/admin/analytics/system">
+              <Button variant="outline" size="sm">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                System Analytics
+              </Button>
+            </Link>
+            <Link href="/dashboard/admin/analytics/revenue">
+              <Button variant="outline" size="sm">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Revenue Analytics
+              </Button>
+            </Link>
+            <Link href="/dashboard/admin/analytics/traffic">
+              <Button variant="outline" size="sm">
+                <Activity className="h-4 w-4 mr-2" />
+                Traffic Analytics
+              </Button>
+            </Link>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -291,7 +312,7 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={systemStats.userGrowthData}>
+                <AreaChart data={systemStats.userGrowthData || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -320,7 +341,7 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={systemStats.violationTrendData}>
+                <LineChart data={systemStats.violationTrendData || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis yAxisId="left" />
@@ -362,7 +383,7 @@ export default function AdminAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={systemStats.userRoleDistribution}
+                    data={systemStats.userRoleDistribution || []}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -370,7 +391,7 @@ export default function AdminAnalyticsPage() {
                     paddingAngle={2}
                     dataKey="count"
                   >
-                    {systemStats.userRoleDistribution.map((entry, index) => (
+                    {systemStats.userRoleDistribution?.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -393,7 +414,7 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={systemStats.monthlyPerformance}>
+                <BarChart data={systemStats.monthlyPerformance || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -418,7 +439,7 @@ export default function AdminAnalyticsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {systemStats.violationTypeDistribution.map((violation, index) => (
+            {systemStats.violationTypeDistribution?.map((violation, index) => (
               <div
                 key={violation.type}
                 className="flex items-center justify-between"

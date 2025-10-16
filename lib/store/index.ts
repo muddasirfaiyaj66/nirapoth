@@ -7,6 +7,12 @@ import vehicleSlice from "./slices/vehicleSlice";
 import adminUsersSlice from "./slices/adminUsersSlice";
 import adminViolationsSlice from "./slices/adminViolationsSlice";
 import profileSlice from "./slices/profileSlice";
+import systemAnalyticsSlice from "./slices/systemAnalyticsSlice";
+import revenueAnalyticsSlice from "./slices/revenueAnalyticsSlice";
+import trafficAnalyticsSlice from "./slices/trafficAnalyticsSlice";
+import fineSlice from "./slices/fineSlice";
+import notificationSlice from "./slices/notificationSlice";
+import citizenReportsSlice from "./slices/citizenReportsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +24,12 @@ export const store = configureStore({
     adminUsers: adminUsersSlice,
     adminViolations: adminViolationsSlice,
     profile: profileSlice,
+    systemAnalytics: systemAnalyticsSlice,
+    revenueAnalytics: revenueAnalyticsSlice,
+    trafficAnalytics: trafficAnalyticsSlice,
+    fine: fineSlice,
+    notification: notificationSlice,
+    citizenReports: citizenReportsSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

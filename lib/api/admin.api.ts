@@ -218,8 +218,32 @@ export class AdminApiService {
   }
 
   // Analytics
-  static async getSystemAnalytics() {
-    return ApiClient.get(`${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS}/system`);
+  static async getSystemAnalytics(params?: { range?: string }) {
+    return ApiClient.get(
+      `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS}/system`,
+      params
+    );
+  }
+
+  static async getRevenueAnalytics(params?: {
+    range?: string;
+    granularity?: string;
+  }) {
+    return ApiClient.get(
+      `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS}/revenue`,
+      params
+    );
+  }
+
+  static async getTrafficAnalytics(params?: {
+    range?: string;
+    location?: string;
+    violationType?: string;
+  }) {
+    return ApiClient.get(
+      `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS}/traffic`,
+      params
+    );
   }
 
   static async getDashboardStats() {
