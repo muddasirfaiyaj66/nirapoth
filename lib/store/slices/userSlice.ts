@@ -166,22 +166,76 @@ const userSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload.users;
-        state.pagination = action.payload.pagination;
+
+        // DEBUG: Log response
+        console.log("🔍 [DEBUG] fetchUsers response:", action.payload);
+
+        // Handle multiple response formats
+        const data = action.payload?.data || action.payload;
+        state.users = Array.isArray(data) ? data : data?.users || [];
+        state.pagination = data?.pagination || action.payload?.pagination;
+
+        console.log(
+          "✅ [DEBUG] fetchUsers - users count:",
+          state.users?.length
+        );
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        console.error("❌ [DEBUG] fetchUsers failed:", action.error);
       })
       // Fetch verifications
+      .addCase(fetchVerifications.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchVerifications.fulfilled, (state, action) => {
-        state.verifications = action.payload.users;
-        state.pagination = action.payload.pagination;
+        state.loading = false;
+
+        // DEBUG: Log response
+        console.log("🔍 [DEBUG] fetchVerifications response:", action.payload);
+
+        // Handle multiple response formats
+        const data = action.payload?.data || action.payload;
+        state.verifications = Array.isArray(data) ? data : data?.users || [];
+        state.pagination = data?.pagination || action.payload?.pagination;
+
+        console.log(
+          "✅ [DEBUG] fetchVerifications - count:",
+          state.verifications?.length
+        );
+      })
+      .addCase(fetchVerifications.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        console.error("❌ [DEBUG] fetchVerifications failed:", action.error);
       })
       // Fetch blocked users
+      .addCase(fetchBlockedUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchBlockedUsers.fulfilled, (state, action) => {
-        state.blockedUsers = action.payload.users;
-        state.pagination = action.payload.pagination;
+        state.loading = false;
+
+        // DEBUG: Log response
+        console.log("🔍 [DEBUG] fetchBlockedUsers response:", action.payload);
+
+        // Handle multiple response formats
+        const data = action.payload?.data || action.payload;
+        state.blockedUsers = Array.isArray(data) ? data : data?.users || [];
+        state.pagination = data?.pagination || action.payload?.pagination;
+
+        console.log(
+          "✅ [DEBUG] fetchBlockedUsers - count:",
+          state.blockedUsers?.length
+        );
+      })
+      .addCase(fetchBlockedUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        console.error("❌ [DEBUG] fetchBlockedUsers failed:", action.error);
       })
       // Fetch role management
       .addCase(fetchRoleManagement.fulfilled, (state, action) => {

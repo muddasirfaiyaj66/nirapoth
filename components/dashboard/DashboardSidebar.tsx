@@ -32,6 +32,13 @@ import {
   Phone,
   Mail,
   Ban,
+  DollarSign,
+  Zap,
+  CheckCircle2,
+  Gauge,
+  Siren,
+  Wallet,
+  Construction,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -56,7 +63,14 @@ export function DashboardSidebar() {
         title: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
+        roles: [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "POLICE",
+          "FIRE_SERVICE",
+          "CITIZEN",
+          "CITY_CORPORATION",
+        ],
       },
     ];
 
@@ -251,6 +265,13 @@ export function DashboardSidebar() {
                 roles: ["ADMIN", "SUPER_ADMIN"],
               },
             ],
+          },
+          {
+            id: "admin-notifications",
+            title: "Send Notifications",
+            href: "/dashboard/admin/notifications",
+            icon: Bell,
+            roles: ["ADMIN", "SUPER_ADMIN"],
           }
         );
         break;
@@ -267,55 +288,79 @@ export function DashboardSidebar() {
           {
             id: "violations",
             title: "Traffic Violations",
-            href: "/police/violations",
+            href: "/dashboard/police/violations",
             icon: Shield,
-            badge: "12",
             roles: ["POLICE"],
             children: [
               {
                 id: "pending-violations",
                 title: "Pending Review",
-                href: "/police/violations/pending",
+                href: "/dashboard/police/violations/pending",
                 icon: AlertTriangle,
-                badge: "8",
                 roles: ["POLICE"],
               },
               {
                 id: "confirmed-violations",
                 title: "Confirmed",
-                href: "/police/violations/confirmed",
+                href: "/dashboard/police/violations/confirmed",
                 icon: Shield,
                 roles: ["POLICE"],
               },
             ],
           },
           {
-            id: "incidents",
-            title: "Incident Reports",
-            href: "/police/incidents",
-            icon: AlertTriangle,
-            badge: "5",
+            id: "citizen-reports",
+            title: "Citizen Reports",
+            href: "/dashboard/police/review-reports",
+            icon: FileText,
             roles: ["POLICE"],
           },
           {
-            id: "complaints",
-            title: "Complaints",
-            href: "/police/complaints",
-            icon: FileText,
-            badge: "3",
+            id: "appeals",
+            title: "Review Appeals",
+            href: "/dashboard/police/review-appeals",
+            icon: CheckCircle2,
+            roles: ["POLICE"],
+          },
+          {
+            id: "manual-cases",
+            title: "Manual Cases",
+            href: "/dashboard/police/manual-cases",
+            icon: Activity,
+            roles: ["POLICE"],
+          },
+          {
+            id: "accidents",
+            title: "Accidents",
+            href: "/dashboard/police/accidents",
+            icon: Siren,
+            roles: ["POLICE"],
+          },
+          {
+            id: "speed-monitoring",
+            title: "Speed Monitoring",
+            href: "/dashboard/police/speed-monitoring",
+            icon: Gauge,
+            roles: ["POLICE"],
+          },
+          {
+            id: "incidents",
+            title: "Incident Reports",
+            href: "/dashboard/police/incidents",
+            icon: AlertTriangle,
             roles: ["POLICE"],
           },
           {
             id: "cameras",
             title: "Camera Monitoring",
-            href: "/police/cameras",
+            href: "/dashboard/police/cameras",
             icon: Camera,
             roles: ["POLICE"],
           },
           {
             id: "fines",
             title: "Fine Management",
-            href: "/police/fines",
+            href: "/dashboard/police/fines",
             icon: CreditCard,
             roles: ["POLICE"],
           }
@@ -352,100 +397,72 @@ export function DashboardSidebar() {
       case "CITIZEN":
         baseItems.push(
           {
-            id: "management",
-            title: "Management",
-            href: "/dashboard/management",
-            icon: Settings,
+            id: "report-violation",
+            title: "Report Violation",
+            href: "/dashboard/citizen/report-violation",
+            icon: Camera,
             roles: ["CITIZEN"],
-            children: [
-              {
-                id: "driving-licenses",
-                title: "Driving Licenses",
-                href: "/dashboard/licenses",
-                icon: CreditCard,
-                roles: ["CITIZEN"],
-              },
-              {
-                id: "vehicle-assignments",
-                title: "Vehicle Assignments",
-                href: "/dashboard/vehicles",
-                icon: Car,
-                roles: ["CITIZEN"],
-              },
-              {
-                id: "user-profile",
-                title: "Profile Management",
-                href: "/profile",
-                icon: Users,
-                roles: ["CITIZEN"],
-              },
-            ],
+          },
+          {
+            id: "my-reports",
+            title: "My Reports",
+            href: "/dashboard/citizen/my-reports",
+            icon: FileText,
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "my-rewards",
+            title: "My Rewards",
+            href: "/dashboard/citizen/rewards",
+            icon: Wallet,
+            roles: ["CITIZEN"],
           },
           {
             id: "my-vehicles",
             title: "My Vehicles",
-            href: "/citizen/vehicles",
-            icon: Car,
-            roles: ["CITIZEN"],
-          },
-          {
-            id: "assigned-vehicles",
-            title: "Vehicle Assignments",
-            href: "/dashboard/vehicles",
+            href: "/dashboard/citizen/vehicles",
             icon: Car,
             roles: ["CITIZEN"],
           },
           {
             id: "my-violations",
             title: "My Violations",
-            href: "/citizen/violations",
+            href: "/dashboard/citizen/violations",
             icon: Shield,
-            badge: "2",
+            roles: ["CITIZEN"],
+          },
+          {
+            id: "submit-appeal",
+            title: "Submit Appeal",
+            href: "/dashboard/citizen/appeals",
+            icon: CheckCircle2,
             roles: ["CITIZEN"],
           },
           {
             id: "citizen-gems",
             title: "My Gems",
-            href: "/citizen/gems",
+            href: "/dashboard/citizen/gems",
             icon: Activity,
             roles: ["CITIZEN"],
           },
           {
-            id: "payments",
-            title: "Payments",
-            href: "/dashboard/payments",
-            icon: CreditCard,
-            roles: ["CITIZEN"],
-          },
-          {
-            id: "file-complaint",
-            title: "File Complaint",
-            href: "/citizen/complaints/new",
-            icon: FileText,
-            roles: ["CITIZEN"],
-          },
-          {
-            id: "my-complaints",
-            title: "My Complaints",
-            href: "/dashboard/complaints",
-            icon: FileText,
-            roles: ["CITIZEN"],
-          },
-          {
-            id: "traffic-maps",
-            title: "Traffic Maps",
-            href: "/citizen/maps",
-            icon: MapPin,
-            roles: ["CITIZEN"],
-          },
-          {
-            id: "emergency-contacts",
-            title: "Emergency Contacts",
-            href: "/citizen/emergency",
-            icon: Phone,
+            id: "report-infrastructure",
+            title: "Report Infrastructure",
+            href: "/dashboard/citizen/report-infrastructure",
+            icon: Construction,
             roles: ["CITIZEN"],
           }
         );
+        break;
+
+      case "CITY_CORPORATION":
+        baseItems.push({
+          id: "infrastructure",
+          title: "Infrastructure Management",
+          href: "/dashboard/city-corporation/infrastructure",
+          icon: Construction,
+          roles: ["CITY_CORPORATION"],
+        });
         break;
     }
 
@@ -456,15 +473,29 @@ export function DashboardSidebar() {
         title: "Notifications",
         href: "/notifications",
         icon: Bell,
-        badge: "5",
-        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
+        badge: undefined, // Will be populated dynamically from NotificationDropdown
+        roles: [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "POLICE",
+          "FIRE_SERVICE",
+          "CITIZEN",
+          "CITY_CORPORATION",
+        ],
       },
       {
         id: "profile",
         title: "Profile Settings",
         href: "/profile",
         icon: Settings,
-        roles: ["ADMIN", "POLICE", "FIRE_SERVICE", "CITIZEN"],
+        roles: [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "POLICE",
+          "FIRE_SERVICE",
+          "CITIZEN",
+          "CITY_CORPORATION",
+        ],
       }
     );
 

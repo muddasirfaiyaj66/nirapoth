@@ -7,6 +7,33 @@ export interface ApiError {
   details?: any;
 }
 
+/**
+ * Extract error message from various error types
+ * Handles Error objects, strings, and Redux rejection payloads
+ */
+export const getErrorMessage = (
+  error: any,
+  fallback: string = "An error occurred"
+): string => {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error?.message) {
+    return error.message;
+  }
+
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
+  }
+
+  if (error?.response?.data?.error) {
+    return error.response.data.error;
+  }
+
+  return fallback;
+};
+
 export class ApiErrorHandler {
   static handle(error: any): ApiError {
     console.error("API Error:", error);

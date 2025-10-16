@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +58,7 @@ import {
 } from "@/lib/store/slices/notificationSlice";
 import { toast } from "sonner";
 import { Notification } from "@/lib/api/notifications";
+import { api } from "@/lib/api/apiClient";
 
 interface NotificationFormData {
   title: string;
@@ -53,9 +68,19 @@ interface NotificationFormData {
   targetType: "all" | "role" | "user";
   targetRole?: string;
   targetUserId?: string;
+  targetUserIds?: string[]; // For multiple users
+}
+
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
 }
 
 export default function AdminNotificationsPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { notifications = [], loading } = useAppSelector(
@@ -63,25 +88,82 @@ export default function AdminNotificationsPage() {
   );
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [openUserSelect, setOpenUserSelect] = useState(false);
   const [formData, setFormData] = useState<NotificationFormData>({
     title: "",
     message: "",
     type: "SYSTEM",
-    priority: "MEDIUM",
+    priority: "NORMAL",
     targetType: "all",
+    targetUserIds: [],
   });
 
-  // Check if user has permission
+  // Check if user has permission - Only ADMIN and SUPER_ADMIN
   const canCreateNotification =
-    user?.role === "ADMIN" ||
-    user?.role === "SUPER_ADMIN" ||
-    user?.role === "POLICE";
+    user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+
+  // Redirect if user doesn't have permission
+  useEffect(() => {
+    if (user && !canCreateNotification) {
+      toast.error(
+        "Access Denied: Only administrators can broadcast notifications"
+      );
+      router.push("/dashboard");
+    }
+  }, [user, canCreateNotification, router]);
 
   useEffect(() => {
     if (canCreateNotification) {
       dispatch(fetchNotifications({ page: 1, limit: 50 }));
+      // Fetch users for the dropdown
+      fetchUsers();
     }
   }, [canCreateNotification, dispatch]);
+
+  // Fetch all users for dropdown
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await api.get<{
+        users: User[];
+        pagination: any;
+      }>("/admin/users", { params: { page: 1, limit: 1000 } });
+      setUsers(response.data?.users || []);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      toast.error("Failed to load users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset form data
+    setFormData({
+      title: "",
+      message: "",
+      type: "SYSTEM",
+      priority: "NORMAL",
+      targetType: "all",
+      targetUserIds: [],
+    });
+    // Reset selected users
+    setSelectedUserIds([]);
+    // Close dialog
+    setIsCreateDialogOpen(false);
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      // Reset when dialog is closed
+      handleCancel();
+    } else {
+      setIsCreateDialogOpen(open);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,8 +180,13 @@ export default function AdminNotificationsPage() {
       return;
     }
 
-    if (formData.targetType === "user" && !formData.targetUserId) {
-      toast.error("Please enter a user ID to send the notification to");
+    if (
+      formData.targetType === "user" &&
+      (!selectedUserIds || selectedUserIds.length === 0)
+    ) {
+      toast.error(
+        "Please select at least one user to send the notification to"
+      );
       return;
     }
 
@@ -127,29 +214,26 @@ export default function AdminNotificationsPage() {
           })
         ).unwrap();
         toast.success(`Notification sent to all ${formData.targetRole}s!`);
-      } else if (formData.targetType === "user" && formData.targetUserId) {
-        // Send to specific user
-        await dispatch(
-          createNotification({
-            title: formData.title,
-            message: formData.message,
-            type: formData.type,
-            priority: formData.priority,
-            targetUserId: formData.targetUserId,
-          })
-        ).unwrap();
-        toast.success("Notification sent to user!");
+      } else if (formData.targetType === "user" && selectedUserIds.length > 0) {
+        // Send to specific users (multiple)
+        for (const userId of selectedUserIds) {
+          await dispatch(
+            createNotification({
+              title: formData.title,
+              message: formData.message,
+              type: formData.type,
+              priority: formData.priority,
+              targetUserId: userId,
+            })
+          ).unwrap();
+        }
+        toast.success(
+          `Notification sent to ${selectedUserIds.length} user(s) successfully!`
+        );
       }
 
-      // Reset form and refresh notifications list
-      setFormData({
-        title: "",
-        message: "",
-        type: "SYSTEM",
-        priority: "MEDIUM",
-        targetType: "all",
-      });
-      setIsCreateDialogOpen(false);
+      // Reset form and close dialog
+      handleCancel();
 
       // Refresh the notifications list to show the newly created one
       dispatch(fetchNotifications({ page: 1, limit: 50 }));
@@ -201,7 +285,7 @@ export default function AdminNotificationsPage() {
         return "bg-red-600 text-white";
       case "HIGH":
         return "bg-orange-600 text-white";
-      case "MEDIUM":
+      case "NORMAL":
         return "bg-yellow-600 text-white";
       case "LOW":
         return "bg-blue-600 text-white";
@@ -377,7 +461,7 @@ export default function AdminNotificationsPage() {
                 setFormData({
                   ...formData,
                   type: "SYSTEM",
-                  priority: "MEDIUM",
+                  priority: "NORMAL",
                   title: "New Feature Available",
                   message:
                     "We've just launched a new feature: [FEATURE NAME]. Check it out now!",
@@ -399,7 +483,7 @@ export default function AdminNotificationsPage() {
               onClick={() => {
                 setFormData({
                   ...formData,
-                  type: "VIOLATION",
+                  type: "WARNING",
                   priority: "HIGH",
                   title: "Traffic Violation Alert",
                   message:
@@ -422,8 +506,8 @@ export default function AdminNotificationsPage() {
               onClick={() => {
                 setFormData({
                   ...formData,
-                  type: "PAYMENT",
-                  priority: "MEDIUM",
+                  type: "PAYMENT_RECEIVED",
+                  priority: "NORMAL",
                   title: "Payment Reminder",
                   message:
                     "You have pending fines that are due soon. Please make payment to avoid late fees.",
@@ -445,8 +529,8 @@ export default function AdminNotificationsPage() {
               onClick={() => {
                 setFormData({
                   ...formData,
-                  type: "LICENSE",
-                  priority: "MEDIUM",
+                  type: "WARNING",
+                  priority: "HIGH",
                   title: "License Expiry Reminder",
                   message:
                     "Your driving license will expire soon. Please renew it before [DATE].",
@@ -537,7 +621,7 @@ export default function AdminNotificationsPage() {
       </Card>
 
       {/* Create Notification Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Notification</DialogTitle>
@@ -592,16 +676,96 @@ export default function AdminNotificationsPage() {
                   </Select>
                 </TabsContent>
                 <TabsContent value="user" className="mt-4">
-                  <Input
-                    placeholder="Enter user ID"
-                    value={formData.targetUserId || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, targetUserId: e.target.value })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter the specific user ID to send this notification
-                  </p>
+                  <div className="space-y-2">
+                    <Popover
+                      open={openUserSelect}
+                      onOpenChange={setOpenUserSelect}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openUserSelect}
+                          className="w-full justify-between"
+                          disabled={loadingUsers}
+                        >
+                          {selectedUserIds.length === 0
+                            ? loadingUsers
+                              ? "Loading users..."
+                              : "Select users..."
+                            : `${selectedUserIds.length} user(s) selected`}
+                          <Users className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[500px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandEmpty>No users found.</CommandEmpty>
+                          <CommandGroup className="max-h-64 overflow-auto">
+                            {users.map((u) => (
+                              <CommandItem
+                                key={u.id}
+                                value={u.id}
+                                onSelect={() => {
+                                  setSelectedUserIds((current) =>
+                                    current.includes(u.id)
+                                      ? current.filter((id) => id !== u.id)
+                                      : [...current, u.id]
+                                  );
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    selectedUserIds.includes(u.id)
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  }`}
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">
+                                    {u.firstName} {u.lastName}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {u.email} • {u.role}
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Display selected users */}
+                    {selectedUserIds.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedUserIds.map((id) => {
+                          const selectedUser = users.find((u) => u.id === id);
+                          return selectedUser ? (
+                            <Badge
+                              key={id}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {selectedUser.firstName} {selectedUser.lastName}
+                              <X
+                                className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                onClick={() =>
+                                  setSelectedUserIds((current) =>
+                                    current.filter((userId) => userId !== id)
+                                  )
+                                }
+                              />
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                      Select multiple users to send this notification to
+                    </p>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
@@ -623,12 +787,27 @@ export default function AdminNotificationsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SYSTEM">System</SelectItem>
-                  <SelectItem value="VIOLATION">Violation</SelectItem>
-                  <SelectItem value="FINE">Fine</SelectItem>
-                  <SelectItem value="PAYMENT">Payment</SelectItem>
-                  <SelectItem value="COMPLAINT">Complaint</SelectItem>
-                  <SelectItem value="VEHICLE">Vehicle</SelectItem>
-                  <SelectItem value="LICENSE">License</SelectItem>
+                  <SelectItem value="INFO">Information</SelectItem>
+                  <SelectItem value="WARNING">Warning</SelectItem>
+                  <SelectItem value="SUCCESS">Success</SelectItem>
+                  <SelectItem value="ERROR">Error</SelectItem>
+                  <SelectItem value="REPORT_SUBMITTED">
+                    Report Submitted
+                  </SelectItem>
+                  <SelectItem value="REPORT_APPROVED">
+                    Report Approved
+                  </SelectItem>
+                  <SelectItem value="REPORT_REJECTED">
+                    Report Rejected
+                  </SelectItem>
+                  <SelectItem value="REWARD_EARNED">Reward Earned</SelectItem>
+                  <SelectItem value="PENALTY_APPLIED">
+                    Penalty Applied
+                  </SelectItem>
+                  <SelectItem value="DEBT_CREATED">Debt Created</SelectItem>
+                  <SelectItem value="PAYMENT_RECEIVED">
+                    Payment Received
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -650,7 +829,7 @@ export default function AdminNotificationsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="NORMAL">Normal</SelectItem>
                   <SelectItem value="HIGH">High</SelectItem>
                   <SelectItem value="URGENT">Urgent</SelectItem>
                 </SelectContent>
@@ -724,11 +903,7 @@ export default function AdminNotificationsPage() {
 
             {/* Actions */}
             <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>

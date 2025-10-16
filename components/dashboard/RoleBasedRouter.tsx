@@ -23,7 +23,8 @@ export function RoleBasedRouter({ children }: RoleBasedRouterProps) {
         ADMIN: "/dashboard/admin",
         SUPER_ADMIN: "/dashboard/admin",
         POLICE: "/dashboard/police",
-        CITIZEN: "/dashboard/citizen",
+        CITIZEN: "/dashboard",
+        CITY_CORPORATION: "/dashboard/city-corporation",
         FIRE_SERVICE: "/dashboard/police", // Fire service uses police dashboard for now
       };
 

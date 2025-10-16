@@ -50,9 +50,12 @@ import {
   setFilters,
   clearFilters,
   setPagination,
+  addNotification,
 } from "@/lib/store/slices/notificationSlice";
 import { toast } from "sonner";
 import { Notification } from "@/lib/api/notifications";
+import { useSocket, useSocketEvent } from "@/hooks/useSocket";
+import { playNotificationSound } from "@/lib/utils/notificationSound";
 
 export default function NotificationsPage() {
   const dispatch = useAppDispatch();
@@ -72,6 +75,57 @@ export default function NotificationsPage() {
   const [readFilter, setReadFilter] = useState<string>("all");
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
+
+  // Initialize socket connection
+  const { socket, isConnected } = useSocket();
+
+  // Listen for real-time notifications
+  useSocketEvent<Notification>("notification:new", (notification) => {
+    console.log(
+      "🔔 New notification received on notifications page:",
+      notification
+    );
+
+    // Add to Redux store
+    dispatch(addNotification(notification));
+
+    // Update unread count and stats
+    dispatch(fetchUnreadCount());
+    dispatch(fetchNotificationStats());
+
+    // Play sound based on priority
+    playNotificationSound(notification.type, notification.priority);
+
+    // Show toast notification
+    toast.info(notification.title, {
+      description: notification.message,
+      duration: 5000,
+    });
+  });
+
+  // Listen for urgent notifications with special handling
+  useSocketEvent<Notification>("notification:urgent", (notification) => {
+    console.log(
+      "🚨 URGENT notification received on notifications page:",
+      notification
+    );
+
+    // Add to Redux store
+    dispatch(addNotification(notification));
+
+    // Update unread count and stats
+    dispatch(fetchUnreadCount());
+    dispatch(fetchNotificationStats());
+
+    // Play urgent sound
+    playNotificationSound(notification.type, "URGENT");
+
+    // Show prominent toast
+    toast.error(notification.title, {
+      description: notification.message,
+      duration: 10000, // Longer duration for urgent notifications
+    });
+  });
 
   // Load notifications on mount
   useEffect(() => {
@@ -227,11 +281,9 @@ export default function NotificationsPage() {
     });
   };
 
-  // Check if user can create notifications
+  // Check if user can create notifications - Only ADMIN and SUPER_ADMIN
   const canCreateNotifications =
-    user?.role === "ADMIN" ||
-    user?.role === "SUPER_ADMIN" ||
-    user?.role === "POLICE";
+    user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
 
   return (
     <div className="container mx-auto py-6 pt-24 space-y-6">

@@ -82,6 +82,7 @@ export default function PoliceReviewReportsPage() {
     pendingCount: 0,
     reviewedToday: 0,
     approvalRate: 0,
+    avgReviewTime: 0,
   });
 
   // Load pending reports on mount
@@ -109,12 +110,20 @@ export default function PoliceReviewReportsPage() {
   };
 
   const loadReviewStats = async () => {
-    // This would be an API call in production
-    setReviewStats({
-      pendingCount: reports.length,
-      reviewedToday: 0,
-      approvalRate: 85,
-    });
+    try {
+      const { citizenReportApi } = await import("@/lib/api/citizenReports");
+      const stats = await citizenReportApi.getReviewStats();
+      setReviewStats(stats);
+    } catch (error) {
+      console.error("Error loading review stats:", error);
+      // Fallback to default values
+      setReviewStats({
+        pendingCount: 0,
+        reviewedToday: 0,
+        approvalRate: 0,
+        avgReviewTime: 0,
+      });
+    }
   };
 
   const handleSearch = () => {
@@ -151,7 +160,7 @@ export default function PoliceReviewReportsPage() {
         reviewReport({
           reportId: selectedReport.id,
           data: {
-            status: reviewAction,
+            action: reviewAction,
             reviewNotes: reviewNotes.trim(),
           },
         })
@@ -167,10 +176,24 @@ export default function PoliceReviewReportsPage() {
       setSelectedReport(null);
       setReviewNotes("");
 
-      // Refresh stats
+      // Refresh data
+      loadPendingReports();
       loadReviewStats();
     } catch (error: any) {
-      toast.error(error || "Failed to submit review");
+      console.error("Review submission error:", error);
+      let errorMessage = "Failed to submit review";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error?.message && typeof error.message === "string") {
+        errorMessage = error.message;
+      } else if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -210,7 +233,7 @@ export default function PoliceReviewReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {pagination?.total || 0}
+              {reviewStats.pendingCount}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Reports awaiting review
@@ -230,7 +253,7 @@ export default function PoliceReviewReportsPage() {
               {reviewStats.reviewedToday}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Cases processed today
+              Cases processed by you today
             </p>
           </CardContent>
         </Card>
@@ -245,7 +268,7 @@ export default function PoliceReviewReportsPage() {
               {reviewStats.approvalRate}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Overall approval rate
+              Overall system approval rate
             </p>
           </CardContent>
         </Card>

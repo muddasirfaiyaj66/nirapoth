@@ -11,6 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -43,6 +51,8 @@ export default function UserVerificationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
   const [page, setPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const dispatch = useAppDispatch();
 
   const { verifications, loading, error } = useAppSelector(
@@ -56,10 +66,16 @@ export default function UserVerificationPage() {
     );
   }, [dispatch, page, activeTab]);
 
+  const handleReviewUser = (user: any) => {
+    setSelectedUser(user);
+    setIsReviewDialogOpen(true);
+  };
+
   const handleVerify = async (userId: string, verified: boolean) => {
     try {
       await dispatch(verifyUser({ userId, verified })).unwrap();
       toast.success("User verification updated successfully");
+      setIsReviewDialogOpen(false);
       // Refresh the data
       dispatch(
         fetchVerifications({ page, limit: 10, status: activeTab.toUpperCase() })
@@ -221,7 +237,11 @@ export default function UserVerificationPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Button size="sm" variant="outline">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleReviewUser(user)}
+                                >
                                   <Eye className="h-4 w-4 mr-1" />
                                   Review
                                 </Button>
@@ -411,6 +431,169 @@ export default function UserVerificationPage() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Review User Dialog */}
+          <Dialog
+            open={isReviewDialogOpen}
+            onOpenChange={setIsReviewDialogOpen}
+          >
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Review User Details</DialogTitle>
+                <DialogDescription>
+                  Carefully review the user's information before approving or
+                  rejecting
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedUser && (
+                <div className="space-y-4">
+                  {/* Personal Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">
+                        Personal Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Full Name
+                        </Label>
+                        <p className="font-medium">
+                          {selectedUser.firstName} {selectedUser.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Email</Label>
+                        <p className="font-medium">{selectedUser.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Phone</Label>
+                        <p className="font-medium">
+                          {selectedUser.phone || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Role</Label>
+                        <Badge variant="outline">{selectedUser.role}</Badge>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">NID No</Label>
+                        <p className="font-medium">
+                          {selectedUser.nidNo || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Birth Certificate No
+                        </Label>
+                        <p className="font-medium">
+                          {selectedUser.birthCertificateNo || "N/A"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Account Status */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Account Status</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Email Verified
+                        </Label>
+                        <div>
+                          {selectedUser.isEmailVerified ? (
+                            <Badge variant="default" className="bg-green-600">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Account Status
+                        </Label>
+                        <div>
+                          {selectedUser.isBlocked ? (
+                            <Badge variant="destructive">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Blocked
+                            </Badge>
+                          ) : (
+                            <Badge variant="default">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Registration Date
+                        </Label>
+                        <p className="font-medium">
+                          {new Date(
+                            selectedUser.createdAt
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">
+                          Last Updated
+                        </Label>
+                        <p className="font-medium">
+                          {new Date(
+                            selectedUser.updatedAt
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Actions */}
+                  <DialogFooter className="gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsReviewDialogOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    {!selectedUser.isEmailVerified && (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="border-red-600 text-red-600 hover:bg-red-50"
+                          onClick={() => handleVerify(selectedUser.id, false)}
+                          disabled={loading}
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleVerify(selectedUser.id, true)}
+                          disabled={loading}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Approve
+                        </Button>
+                      </>
+                    )}
+                  </DialogFooter>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </AdminProtectedRoute>
     </ProtectedRoute>

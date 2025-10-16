@@ -366,6 +366,86 @@ export function AdvancedDashboard() {
           },
         ];
 
+      case "CITIZEN":
+        return [
+          {
+            title: "My Reports",
+            value: baseStats.totalComplaints.toString(),
+            change: { value: 5, type: "increase" as const },
+            icon: FileText,
+            description: "Total submitted",
+            sparklineData: generateSparklineData(),
+            trend: "up" as const,
+          },
+          {
+            title: "Pending Review",
+            value: baseStats.pendingReports.toString(),
+            change: { value: 2, type: "decrease" as const },
+            icon: Clock,
+            description: "Awaiting approval",
+            sparklineData: generateSparklineData(),
+            trend: "down" as const,
+          },
+          {
+            title: "Total Rewards",
+            value: `৳${baseStats.totalRevenue.toLocaleString()}`,
+            change: { value: 12, type: "increase" as const },
+            icon: DollarSign,
+            description: "Earned from reports",
+            sparklineData: generateSparklineData(),
+            trend: "up" as const,
+          },
+          {
+            title: "Gem Balance",
+            value: baseStats.driverGems.toString(),
+            change: { value: 0, type: "stable" as const },
+            icon: Activity,
+            description: "Monthly allocation",
+            sparklineData: generateSparklineData(),
+            trend: "stable" as const,
+          },
+        ];
+
+      case "CITY_CORPORATION":
+        return [
+          {
+            title: "Infrastructure Complaints",
+            value: baseStats.totalComplaints.toString(),
+            change: { value: 8, type: "increase" as const },
+            icon: AlertTriangle,
+            description: "Total received",
+            sparklineData: generateSparklineData(),
+            trend: "up" as const,
+          },
+          {
+            title: "Pending",
+            value: baseStats.pendingReports.toString(),
+            change: { value: 3, type: "decrease" as const },
+            icon: Clock,
+            description: "Awaiting resolution",
+            sparklineData: generateSparklineData(),
+            trend: "down" as const,
+          },
+          {
+            title: "Resolved",
+            value: baseStats.resolvedReports.toString(),
+            change: { value: 15, type: "increase" as const },
+            icon: CheckCircle2,
+            description: "This month",
+            sparklineData: generateSparklineData(),
+            trend: "up" as const,
+          },
+          {
+            title: "Response Time",
+            value: "24h",
+            change: { value: 10, type: "decrease" as const },
+            icon: Activity,
+            description: "Average resolution",
+            sparklineData: generateSparklineData(),
+            trend: "down" as const,
+          },
+        ];
+
       default:
         return [];
     }
@@ -389,6 +469,24 @@ export function AdvancedDashboard() {
             href: "/dashboard/admin/analytics",
           },
           {
+            title: "Revenue Management",
+            description: "Track payments and revenue",
+            icon: DollarSign,
+            href: "/dashboard/admin/finances/revenue",
+          },
+          {
+            title: "Disputes",
+            description: "Manage disputed fines",
+            icon: AlertTriangle,
+            href: "/dashboard/admin/finances/disputes",
+          },
+          {
+            title: "Create Notification",
+            description: "Send notifications to users",
+            icon: Activity,
+            href: "/dashboard/admin/notifications",
+          },
+          {
             title: "Camera Network",
             description: "Monitor all cameras",
             icon: Camera,
@@ -405,16 +503,84 @@ export function AdvancedDashboard() {
             href: "/dashboard/police/violations",
           },
           {
-            title: "Handle Incidents",
-            description: "Manage incident reports",
-            icon: AlertTriangle,
-            href: "/dashboard/police/incidents",
+            title: "Review Reports",
+            description: "Review citizen violation reports",
+            icon: FileText,
+            href: "/dashboard/police/review-reports",
           },
           {
-            title: "Camera Monitoring",
-            description: "Monitor traffic cameras",
+            title: "Review Appeals",
+            description: "Process fine appeals",
+            icon: CheckCircle2,
+            href: "/dashboard/police/review-appeals",
+          },
+          {
+            title: "Manual Cases",
+            description: "Log manual traffic cases",
+            icon: Activity,
+            href: "/dashboard/police/manual-cases",
+          },
+          {
+            title: "Accidents",
+            description: "Monitor accidents",
+            icon: AlertTriangle,
+            href: "/dashboard/police/accidents",
+          },
+          {
+            title: "Speed Monitoring",
+            description: "Track speed violations",
+            icon: Zap,
+            href: "/dashboard/police/speed-monitoring",
+          },
+        ];
+
+      case "CITIZEN":
+        return [
+          {
+            title: "Report Violation",
+            description: "Submit traffic violation reports",
             icon: Camera,
-            href: "/dashboard/police/cameras",
+            href: "/citizen/report-violation",
+          },
+          {
+            title: "My Reports",
+            description: "Track your submitted reports",
+            icon: FileText,
+            href: "/citizen/my-reports",
+          },
+          {
+            title: "My Rewards",
+            description: "View earnings and withdraw",
+            icon: DollarSign,
+            href: "/citizen/rewards",
+          },
+          {
+            title: "Submit Appeal",
+            description: "Appeal against fines",
+            icon: Shield,
+            href: "/citizen/appeals",
+          },
+          {
+            title: "My Gems",
+            description: "View gem balance",
+            icon: Activity,
+            href: "/citizen/gems",
+          },
+          {
+            title: "Report Infrastructure",
+            description: "Report infrastructure issues",
+            icon: AlertTriangle,
+            href: "/citizen/report-infrastructure",
+          },
+        ];
+
+      case "CITY_CORPORATION":
+        return [
+          {
+            title: "Infrastructure",
+            description: "Manage infrastructure complaints",
+            icon: AlertTriangle,
+            href: "/dashboard/city-corporation/infrastructure",
           },
         ];
 

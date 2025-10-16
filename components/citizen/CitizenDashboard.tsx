@@ -52,6 +52,7 @@ import {
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useComprehensiveRefresh } from "@/hooks/useAutoRefresh";
 
 interface Vehicle {
   id: string;
@@ -145,10 +146,6 @@ export function CitizenDashboard() {
   // Search states
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -182,6 +179,13 @@ export function CitizenDashboard() {
       setLoading(false);
     }
   };
+
+  // Auto-refresh data every 30 seconds + on focus/visibility
+  useComprehensiveRefresh({
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onRefresh: fetchAllData,
+  });
 
   const handleCreateVehicle = async () => {
     try {

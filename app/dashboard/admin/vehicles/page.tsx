@@ -59,7 +59,7 @@ export default function AdminVehiclesPage() {
           </div>
 
           <div className="flex gap-3">
-            <Link href="/citizen/vehicles">
+            <Link href="/dashboard/citizen/vehicles">
               <Button
                 variant="outline"
                 className="border-amber-300 text-amber-700 hover:bg-amber-100"
@@ -220,7 +220,7 @@ export default function AdminVehiclesPage() {
               <h4 className="font-semibold mb-2">For Personal Vehicles:</h4>
               <ul className="space-y-1">
                 <li>• Use your citizen account dashboard</li>
-                <li>• Access via /citizen/vehicles</li>
+                <li>• Access via /dashboard/citizen/vehicles</li>
                 <li>• Add, edit, and manage your vehicles</li>
                 <li>• View your violation history</li>
               </ul>

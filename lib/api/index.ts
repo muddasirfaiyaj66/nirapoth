@@ -14,6 +14,10 @@ export * from "./policeManagement";
 export * from "./aiIntegration";
 export * from "./notifications";
 export * from "./citizenReports";
+export * from "./rewards";
+export * from "./accidents";
+export * from "./speedMonitoring";
+export * from "./analytics";
 
 // Export the main API instance
 export { default as api } from "./auth";

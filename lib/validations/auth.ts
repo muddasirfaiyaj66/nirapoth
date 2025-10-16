@@ -38,18 +38,10 @@ export const registerSchema = z
       .min(10, "Phone number must be at least 10 characters")
       .max(20, "Phone number must not exceed 20 characters"),
 
-    nidNo: z
-      .string()
-      .regex(/^\d{10}$|^\d{17}$/, "NID must be either 10 or 17 digits")
-      .optional()
-      .or(z.literal("")),
+    // NID and Birth Certificate are optional at signup; no strict validation here
+    nidNo: z.string().optional().or(z.literal("")),
 
-    birthCertificateNo: z
-      .string()
-      .regex(/^\d{17}$/, "Birth Certificate Number must be 17 digits")
-      .optional()
-      .or(z.literal("")),
-
+    birthCertificateNo: z.string().optional().or(z.literal("")),
     role: z.nativeEnum(UserRole).optional().default(UserRole.CITIZEN),
   })
   .refine((data) => data.password === data.confirmPassword, {

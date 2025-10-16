@@ -85,12 +85,13 @@ export interface RewardSearchParams {
 export const rewardApi = {
   // Get reward balance
   getMyBalance: async () => {
-    return await api.get<RewardBalance>("/rewards/balance");
+    const response = await api.get<RewardBalance>("/rewards/balance");
+    return response.data as RewardBalance;
   },
 
   // Get reward transactions
   getMyTransactions: async (params?: RewardSearchParams) => {
-    return await api.get<{
+    const response = await api.get<{
       transactions: RewardTransaction[];
       pagination: {
         page: number;
@@ -99,31 +100,48 @@ export const rewardApi = {
         totalPages: number;
       };
     }>("/rewards/transactions", { params });
+    // The api wrapper returns { success, data }, so response.data is already the unwrapped data
+    return response.data as {
+      transactions: RewardTransaction[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
   },
 
   // Get reward statistics
   getMyStats: async () => {
-    return await api.get<RewardStats>("/rewards/stats");
+    const response = await api.get<RewardStats>("/rewards/stats");
+    return response.data as RewardStats;
   },
 
   // Request withdrawal
   requestWithdrawal: async (data: CreateWithdrawalData) => {
-    return await api.post<WithdrawalRequest>("/rewards/withdraw", data);
+    const response = await api.post<WithdrawalRequest>(
+      "/rewards/withdraw",
+      data
+    );
+    return response.data as WithdrawalRequest;
   },
 
   // Get withdrawal requests
   getMyWithdrawals: async () => {
-    return await api.get<WithdrawalRequest[]>("/rewards/withdrawals");
+    const response = await api.get<WithdrawalRequest[]>("/rewards/withdrawals");
+    return response.data as WithdrawalRequest[];
   },
 
   // Cancel withdrawal request
   cancelWithdrawal: async (withdrawalId: string) => {
-    return await api.delete(`/rewards/withdrawals/${withdrawalId}`);
+    const response = await api.delete(`/rewards/withdrawals/${withdrawalId}`);
+    return response.data;
   },
 
   // ADMIN: Get all transactions
   getAllTransactions: async (params?: RewardSearchParams) => {
-    return await api.get<{
+    const response = await api.get<{
       transactions: RewardTransaction[];
       pagination: {
         page: number;
@@ -132,13 +150,27 @@ export const rewardApi = {
         totalPages: number;
       };
     }>("/admin/rewards/transactions", { params });
+    // The api wrapper returns { success, data }, so response.data is already the unwrapped data
+    return response.data as {
+      transactions: RewardTransaction[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
   },
 
   // ADMIN: Get all withdrawal requests
   getAllWithdrawals: async (status?: string) => {
-    return await api.get<WithdrawalRequest[]>("/admin/rewards/withdrawals", {
-      params: { status },
-    });
+    const response = await api.get<WithdrawalRequest[]>(
+      "/admin/rewards/withdrawals",
+      {
+        params: { status },
+      }
+    );
+    return response.data as WithdrawalRequest[];
   },
 
   // ADMIN: Process withdrawal
@@ -149,15 +181,16 @@ export const rewardApi = {
       notes?: string;
     }
   ) => {
-    return await api.put<WithdrawalRequest>(
+    const response = await api.put<WithdrawalRequest>(
       `/admin/rewards/withdrawals/${withdrawalId}`,
       data
     );
+    return response.data as WithdrawalRequest;
   },
 
   // ADMIN: Get reward statistics
   getAdminStats: async () => {
-    return await api.get<{
+    const response = await api.get<{
       totalRewardsDistributed: number;
       totalPenaltiesCollected: number;
       pendingWithdrawals: number;
@@ -168,6 +201,7 @@ export const rewardApi = {
       distributionByType: { type: string; amount: number; count: number }[];
       monthlyTrend: { month: string; rewards: number; penalties: number }[];
     }>("/admin/rewards/stats");
+    return response.data;
   },
 
   // ADMIN: Manual reward/penalty
@@ -177,6 +211,10 @@ export const rewardApi = {
     type: "REWARD" | "PENALTY" | "BONUS" | "DEDUCTION";
     description: string;
   }) => {
-    return await api.post<RewardTransaction>("/admin/rewards/manual", data);
+    const response = await api.post<RewardTransaction>(
+      "/admin/rewards/manual",
+      data
+    );
+    return response.data as RewardTransaction;
   },
 };

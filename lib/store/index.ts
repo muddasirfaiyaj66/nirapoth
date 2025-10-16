@@ -13,6 +13,11 @@ import trafficAnalyticsSlice from "./slices/trafficAnalyticsSlice";
 import fineSlice from "./slices/fineSlice";
 import notificationSlice from "./slices/notificationSlice";
 import citizenReportsSlice from "./slices/citizenReportsSlice";
+import rewardSlice from "./slices/rewardSlice";
+import debtSlice from "./slices/debtSlice";
+import accidentsSlice from "./slices/accidentsSlice";
+import speedMonitoringSlice from "./slices/speedMonitoringSlice";
+import analyticsSlice from "./slices/analyticsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +35,11 @@ export const store = configureStore({
     fine: fineSlice,
     notification: notificationSlice,
     citizenReports: citizenReportsSlice,
+    reward: rewardSlice,
+    debt: debtSlice,
+    accidents: accidentsSlice,
+    speedMonitoring: speedMonitoringSlice,
+    analytics: analyticsSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

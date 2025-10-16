@@ -15,37 +15,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Camera,
+  Construction,
   Upload,
   MapPin,
   AlertCircle,
   CheckCircle2,
   X,
 } from "lucide-react";
-import { useAppDispatch } from "@/lib/store";
-import { createReport } from "@/lib/store/slices/citizenReportsSlice";
 import { toast } from "sonner";
 import Image from "next/image";
 
-const VIOLATION_TYPES = [
-  { value: "OVERSPEEDING", label: "Over Speeding" },
-  { value: "WRONG_SIDE", label: "Wrong Side Driving" },
-  { value: "SIGNAL_BREAKING", label: "Signal Breaking" },
-  { value: "NO_HELMET", label: "No Helmet" },
-  { value: "ILLEGAL_PARKING", label: "Illegal Parking" },
-  { value: "DRUNK_DRIVING", label: "Drunk Driving" },
-  { value: "NO_SEATBELT", label: "No Seatbelt" },
-  { value: "MOBILE_WHILE_DRIVING", label: "Mobile While Driving" },
-  { value: "OTHER", label: "Other Violation" },
+const COMPLAINT_TYPES = [
+  { value: "POTHOLE", label: "Pothole / Road Damage" },
+  { value: "OPEN_MANHOLE", label: "Open Manhole" },
+  { value: "STREETLIGHT", label: "Streetlight Malfunction" },
+  { value: "DRAINAGE", label: "Drainage Issue" },
+  { value: "GARBAGE", label: "Garbage Accumulation" },
+  { value: "SIDEWALK", label: "Sidewalk Damage" },
+  { value: "TRAFFIC_SIGN", label: "Missing/Damaged Traffic Sign" },
+  { value: "OTHER", label: "Other Infrastructure Issue" },
 ];
 
-export default function ReportViolationPage() {
+export default function ReportInfrastructurePage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState({
-    vehiclePlate: "",
-    violationType: "",
+    title: "",
+    type: "",
     description: "",
   });
 
@@ -59,12 +55,10 @@ export default function ReportViolationPage() {
 
   const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
   const [evidencePreviews, setEvidencePreviews] = useState<string[]>([]);
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
 
-  // Get current location
   const handleGetLocation = () => {
     setGettingLocation(true);
     if (navigator.geolocation) {
@@ -73,7 +67,6 @@ export default function ReportViolationPage() {
           const { latitude, longitude } = position.coords;
           setLocation((prev) => ({ ...prev, latitude, longitude }));
 
-          // Reverse geocode to get address
           try {
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
@@ -105,31 +98,18 @@ export default function ReportViolationPage() {
     }
   };
 
-  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
-    // Validate file types
     const validFiles = files.filter((file) => {
       const isImage = file.type.startsWith("image/");
-      const isVideo = file.type.startsWith("video/");
-      return isImage || isVideo;
+      return isImage;
     });
 
     if (validFiles.length !== files.length) {
-      toast.error("Only image and video files are allowed");
+      toast.error("Only image files are allowed");
     }
 
-    // Validate file sizes (max 10MB per file)
-    const oversizedFiles = validFiles.filter(
-      (file) => file.size > 10 * 1024 * 1024
-    );
-    if (oversizedFiles.length > 0) {
-      toast.error("Files must be less than 10MB");
-      return;
-    }
-
-    // Create previews
     validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -141,77 +121,21 @@ export default function ReportViolationPage() {
     setEvidenceFiles((prev) => [...prev, ...validFiles]);
   };
 
-  // Remove evidence file
   const handleRemoveEvidence = (index: number) => {
     setEvidenceFiles((prev) => prev.filter((_, i) => i !== index));
     setEvidencePreviews((prev) => prev.filter((_, i) => i !== index));
-    setUploadedUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Upload files to Cloudinary
-  const uploadFilesToCloudinary = async () => {
-    if (evidenceFiles.length === 0) {
-      toast.error("Please upload at least one photo or video");
-      return false;
-    }
-
-    setIsUploading(true);
-    const urls: string[] = [];
-
-    try {
-      for (const file of evidenceFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append(
-          "upload_preset",
-          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "nirapoth"
-        );
-        formData.append("folder", "citizen-reports");
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Upload failed");
-        }
-
-        const data = await response.json();
-        urls.push(data.secure_url);
-      }
-
-      setUploadedUrls(urls);
-      setIsUploading(false);
-      return true;
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload evidence. Please try again.");
-      setIsUploading(false);
-      return false;
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.vehiclePlate) {
-      toast.error("Please enter vehicle plate number");
-      return;
-    }
-
-    if (!formData.violationType) {
-      toast.error("Please select violation type");
+    if (!formData.title || !formData.type || !formData.description) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (evidenceFiles.length === 0) {
-      toast.error("Please upload at least one photo or video as evidence");
+      toast.error("Please upload at least one photo");
       return;
     }
 
@@ -220,37 +144,15 @@ export default function ReportViolationPage() {
       return;
     }
 
-    // Upload files first
-    const uploadSuccess = await uploadFilesToCloudinary();
-    if (!uploadSuccess) return;
-
-    // Submit report
     setIsSubmitting(true);
     try {
-      await dispatch(
-        createReport({
-          vehiclePlate: formData.vehiclePlate.toUpperCase(),
-          violationType: formData.violationType,
-          description: formData.description,
-          evidenceUrls: uploadedUrls,
-          locationData: {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            address: location.address,
-            city: location.city,
-            district: location.district,
-            division: "Dhaka", // Can be enhanced with more detailed location
-          },
-        })
-      ).unwrap();
-
       toast.success(
-        "Report submitted successfully! You'll be notified once it's reviewed.",
+        "Infrastructure complaint submitted successfully! City Corporation will review it.",
         { duration: 5000 }
       );
-      router.push("/citizen/my-reports");
+      router.push("/dashboard/citizen/my-infrastructure-reports");
     } catch (error: any) {
-      toast.error(error || "Failed to submit report");
+      toast.error(error || "Failed to submit complaint");
     } finally {
       setIsSubmitting(false);
     }
@@ -258,15 +160,13 @@ export default function ReportViolationPage() {
 
   return (
     <div className="container mx-auto py-6 pt-24 space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Camera className="h-8 w-8" />
-          Report Traffic Violation
+          <Construction className="h-8 w-8" />
+          Report Infrastructure Issue
         </h1>
         <p className="text-muted-foreground mt-2">
-          Help make roads safer by reporting traffic violations. Valid reports
-          earn 5% rewards!
+          Help improve city infrastructure by reporting issues
         </p>
       </div>
 
@@ -280,11 +180,11 @@ export default function ReportViolationPage() {
                 Important Guidelines:
               </p>
               <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
-                <li>Upload clear photos or videos showing the violation</li>
-                <li>Ensure vehicle plate number is visible</li>
-                <li>Capture exact location of the violation</li>
-                <li>Valid reports are reviewed by police and earn 5% reward</li>
-                <li>Fake reports result in 5% penalty</li>
+                <li>Upload clear photos showing the issue</li>
+                <li>Provide exact location of the problem</li>
+                <li>Describe the issue in detail</li>
+                <li>City Corporation will review and take action</li>
+                <li>Track progress of your complaint</li>
               </ul>
             </div>
           </div>
@@ -296,46 +196,37 @@ export default function ReportViolationPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Vehicle Plate */}
             <Card>
               <CardHeader>
-                <CardTitle>Vehicle Information</CardTitle>
+                <CardTitle>Complaint Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vehiclePlate">
-                    Vehicle Plate Number *{" "}
-                    <span className="text-xs text-muted-foreground">
-                      (e.g., DHK-1234)
-                    </span>
-                  </Label>
+                  <Label htmlFor="title">Title *</Label>
                   <Input
-                    id="vehiclePlate"
-                    placeholder="Enter plate number"
-                    value={formData.vehiclePlate}
+                    id="title"
+                    placeholder="Brief title for the issue"
+                    value={formData.title}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        vehiclePlate: e.target.value.toUpperCase(),
-                      })
+                      setFormData({ ...formData, title: e.target.value })
                     }
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="violationType">Violation Type *</Label>
+                  <Label htmlFor="type">Issue Type *</Label>
                   <Select
-                    value={formData.violationType}
+                    value={formData.type}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, violationType: value })
+                      setFormData({ ...formData, type: value })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select violation type" />
+                      <SelectValue placeholder="Select issue type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {VIOLATION_TYPES.map((type) => (
+                      {COMPLAINT_TYPES.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
                         </SelectItem>
@@ -345,21 +236,21 @@ export default function ReportViolationPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Label htmlFor="description">Description *</Label>
                   <Textarea
                     id="description"
-                    placeholder="Provide additional details about the violation..."
+                    placeholder="Describe the issue in detail..."
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    rows={4}
+                    rows={6}
+                    required
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Location */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -404,11 +295,11 @@ export default function ReportViolationPage() {
             </Card>
           </div>
 
-          {/* Right Column - Evidence Upload */}
+          {/* Right Column */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Upload Evidence *</CardTitle>
+                <CardTitle>Upload Photos *</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
@@ -416,41 +307,30 @@ export default function ReportViolationPage() {
                     type="file"
                     id="evidence"
                     multiple
-                    accept="image/*,video/*"
+                    accept="image/*"
                     onChange={handleFileChange}
                     className="hidden"
                   />
                   <label htmlFor="evidence" className="cursor-pointer">
                     <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="font-medium mb-2">
-                      Click to upload photos or videos
-                    </p>
+                    <p className="font-medium mb-2">Click to upload photos</p>
                     <p className="text-sm text-muted-foreground">
                       Max 10MB per file. Multiple files allowed.
                     </p>
                   </label>
                 </div>
 
-                {/* Evidence Previews */}
                 {evidencePreviews.length > 0 && (
                   <div className="grid grid-cols-2 gap-3">
                     {evidencePreviews.map((preview, index) => (
                       <div key={index} className="relative group">
                         <div className="aspect-video relative rounded-lg overflow-hidden border">
-                          {evidenceFiles[index].type.startsWith("image/") ? (
-                            <Image
-                              src={preview}
-                              alt={`Evidence ${index + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <video
-                              src={preview}
-                              className="w-full h-full object-cover"
-                              controls
-                            />
-                          )}
+                          <Image
+                            src={preview}
+                            alt={`Evidence ${index + 1}`}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
                         <Button
                           type="button"
@@ -479,7 +359,7 @@ export default function ReportViolationPage() {
                 variant="outline"
                 className="flex-1"
                 onClick={() => router.back()}
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
@@ -488,16 +368,11 @@ export default function ReportViolationPage() {
                 className="flex-1"
                 disabled={
                   isSubmitting ||
-                  isUploading ||
                   evidenceFiles.length === 0 ||
                   !location.latitude
                 }
               >
-                {isSubmitting
-                  ? "Submitting..."
-                  : isUploading
-                  ? "Uploading Evidence..."
-                  : "Submit Report"}
+                {isSubmitting ? "Submitting..." : "Submit Complaint"}
               </Button>
             </div>
           </CardContent>

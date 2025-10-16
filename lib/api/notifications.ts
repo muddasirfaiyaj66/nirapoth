@@ -7,18 +7,31 @@ export interface Notification {
   title: string;
   message: string;
   type:
-    | "VIOLATION"
-    | "FINE"
-    | "COMPLAINT"
-    | "PAYMENT"
+    | "REPORT_SUBMITTED"
+    | "REPORT_APPROVED"
+    | "REPORT_REJECTED"
+    | "APPEAL_SUBMITTED"
+    | "APPEAL_APPROVED"
+    | "APPEAL_REJECTED"
+    | "REWARD_EARNED"
+    | "PENALTY_APPLIED"
+    | "DEBT_CREATED"
+    | "PAYMENT_RECEIVED"
     | "SYSTEM"
-    | "LICENSE"
-    | "VEHICLE";
-  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    | "INFO"
+    | "WARNING"
+    | "SUCCESS"
+    | "ERROR";
+  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
   isRead: boolean;
-  data?: any;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: any;
+  expiresAt?: string;
   createdAt: string;
-  updatedAt: string;
+  readAt?: string;
 }
 
 export interface NotificationStats {

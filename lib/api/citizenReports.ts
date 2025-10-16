@@ -17,6 +17,15 @@ export interface CitizenReport {
   penaltyAmount?: number;
   createdAt: string;
   updatedAt: string;
+  // Appeal fields
+  appealSubmitted?: boolean;
+  appealReason?: string;
+  appealStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  appealReviewedBy?: string;
+  appealReviewedAt?: string;
+  appealNotes?: string;
+  additionalPenaltyApplied?: boolean;
+  additionalPenaltyAmount?: number;
   location?: {
     id: string;
     latitude: number;
@@ -38,6 +47,11 @@ export interface CitizenReport {
     lastName: string;
     badgeNumber?: string;
   };
+  appealReviewer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface CreateCitizenReportData {
@@ -56,7 +70,7 @@ export interface CreateCitizenReportData {
 }
 
 export interface ReviewReportData {
-  status: "APPROVED" | "REJECTED";
+  action: "APPROVED" | "REJECTED";
   reviewNotes: string;
 }
 
@@ -84,12 +98,16 @@ export interface CitizenReportStats {
 export const citizenReportApi = {
   // Submit new citizen report
   createReport: async (data: CreateCitizenReportData) => {
-    return await api.post<CitizenReport>("/citizen-reports", data);
+    const response = await api.post<CitizenReport>(
+      "/citizen-reports/create",
+      data
+    );
+    return response.data as CitizenReport;
   },
 
   // Get my submitted reports
   getMyReports: async (params?: CitizenReportSearchParams) => {
-    return await api.get<{
+    const response = await api.get<{
       reports: CitizenReport[];
       pagination: {
         page: number;
@@ -98,16 +116,31 @@ export const citizenReportApi = {
         totalPages: number;
       };
     }>("/citizen-reports/my-reports", { params });
+    return response.data as {
+      reports: CitizenReport[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
   },
 
   // Get report by ID
   getReportById: async (reportId: string) => {
-    return await api.get<CitizenReport>(`/citizen-reports/${reportId}`);
+    const response = await api.get<CitizenReport>(
+      `/citizen-reports/${reportId}`
+    );
+    return response.data as CitizenReport;
   },
 
   // Get my report statistics
   getMyStats: async () => {
-    return await api.get<CitizenReportStats>("/citizen-reports/my-stats");
+    const response = await api.get<CitizenReportStats>(
+      "/citizen-reports/my-stats"
+    );
+    return response.data as CitizenReportStats;
   },
 
   // Delete my report (only if pending)
@@ -115,9 +148,21 @@ export const citizenReportApi = {
     return await api.delete(`/citizen-reports/${reportId}`);
   },
 
+  // Submit appeal for rejected report
+  submitAppeal: async (
+    reportId: string,
+    data: { appealReason: string; evidenceUrls: string[] }
+  ) => {
+    const response = await api.post<CitizenReport>(
+      `/citizen-reports/${reportId}/appeal`,
+      data
+    );
+    return response.data as CitizenReport;
+  },
+
   // POLICE: Get reports pending review (within jurisdiction)
   getPendingReports: async (params?: CitizenReportSearchParams) => {
-    return await api.get<{
+    const response = await api.get<{
       reports: CitizenReport[];
       pagination: {
         page: number;
@@ -126,29 +171,79 @@ export const citizenReportApi = {
         totalPages: number;
       };
     }>("/police/pending-reports", { params });
+    return response.data as {
+      reports: CitizenReport[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
   },
 
   // POLICE: Review and approve/reject report
   reviewReport: async (reportId: string, data: ReviewReportData) => {
-    return await api.post<CitizenReport>(
-      `/police/review-report/${reportId}`,
+    const response = await api.post<CitizenReport>(
+      `/police/review/${reportId}`,
       data
     );
+    return response.data as CitizenReport;
   },
 
   // POLICE: Get report review statistics
   getReviewStats: async () => {
-    return await api.get<{
+    const response = await api.get<{
       pendingCount: number;
       reviewedToday: number;
       approvalRate: number;
       avgReviewTime: number;
     }>("/police/review-stats");
+    return response.data as {
+      pendingCount: number;
+      reviewedToday: number;
+      approvalRate: number;
+      avgReviewTime: number;
+    };
+  },
+
+  // POLICE: Get pending appeals
+  getPendingAppeals: async (params?: CitizenReportSearchParams) => {
+    const response = await api.get<{
+      reports: CitizenReport[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    }>("/police/pending-appeals", { params });
+    return response.data as {
+      reports: CitizenReport[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  },
+
+  // POLICE: Review appeal
+  reviewAppeal: async (
+    reportId: string,
+    data: { action: "APPROVED" | "REJECTED"; reviewNotes: string }
+  ) => {
+    const response = await api.post<CitizenReport>(
+      `/police/review-appeal/${reportId}`,
+      data
+    );
+    return response.data as CitizenReport;
   },
 
   // ADMIN: Get all reports with full filtering
   getAllReports: async (params?: CitizenReportSearchParams) => {
-    return await api.get<{
+    const response = await api.get<{
       reports: CitizenReport[];
       pagination: {
         page: number;
@@ -157,11 +252,20 @@ export const citizenReportApi = {
         totalPages: number;
       };
     }>("/admin/citizen-reports", { params });
+    return response.data as {
+      reports: CitizenReport[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
   },
 
   // ADMIN: Get comprehensive statistics
   getAdminStats: async () => {
-    return await api.get<{
+    const response = await api.get<{
       totalReports: number;
       pendingReports: number;
       approvedReports: number;
@@ -174,5 +278,18 @@ export const citizenReportApi = {
       reportsByStatus: { status: string; count: number }[];
       reportsTrend: { date: string; count: number }[];
     }>("/admin/citizen-reports/stats");
+    return response.data as {
+      totalReports: number;
+      pendingReports: number;
+      approvedReports: number;
+      rejectedReports: number;
+      totalRewardsDistributed: number;
+      totalPenaltiesCollected: number;
+      approvalRate: number;
+      avgReviewTime: number;
+      reportsByType: { type: string; count: number }[];
+      reportsByStatus: { status: string; count: number }[];
+      reportsTrend: { date: string; count: number }[];
+    };
   },
 };

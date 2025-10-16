@@ -34,6 +34,8 @@ import {
 } from "@/lib/store/slices/notificationSlice";
 import { toast } from "sonner";
 import { Notification } from "@/lib/api/notifications";
+import { useComprehensiveRefresh } from "@/hooks/useAutoRefresh";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function NotificationDropdown() {
   const router = useRouter();
@@ -43,17 +45,20 @@ export default function NotificationDropdown() {
   );
   const [open, setOpen] = useState(false);
 
-  // Fetch notifications and unread count
-  useEffect(() => {
-    dispatch(fetchUnreadCount());
+  // Initialize socket connection
+  const { socket, isConnected } = useSocket();
 
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(() => {
+  // Note: Real-time notification handling is now done in NotificationContainer
+  // This component just refreshes the dropdown when notifications are received
+
+  // Auto-refresh notification count every 30 seconds (backup for socket)
+  useComprehensiveRefresh({
+    enabled: true,
+    interval: 30000,
+    onRefresh: () => {
       dispatch(fetchUnreadCount());
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [dispatch]);
+    },
+  });
 
   useEffect(() => {
     if (open) {
@@ -102,31 +107,36 @@ export default function NotificationDropdown() {
       dispatch(fetchUnreadCount());
     }
 
-    // Navigate based on notification type
+    // Navigate based on notification type or action URL
     setOpen(false);
 
+    // Use actionUrl if provided
+    if (notification.actionUrl) {
+      router.push(notification.actionUrl);
+      return;
+    }
+
+    // Otherwise, navigate based on type and related entity
     switch (notification.type) {
-      case "VIOLATION":
-        if (notification.data?.violationId) {
-          router.push(`/dashboard/violations`);
-        }
+      case "REPORT_SUBMITTED":
+      case "REPORT_APPROVED":
+      case "REPORT_REJECTED":
+        router.push(`/dashboard/citizen/my-reports`);
         break;
-      case "FINE":
-        if (notification.data?.fineId) {
-          router.push(`/dashboard/admin/finances/fines`);
-        }
+      case "APPEAL_SUBMITTED":
+      case "APPEAL_APPROVED":
+      case "APPEAL_REJECTED":
+        router.push(`/dashboard/citizen/appeals`);
         break;
-      case "PAYMENT":
-        router.push(`/dashboard/admin/finances/revenue`);
+      case "REWARD_EARNED":
+        router.push(`/dashboard/citizen/rewards`);
         break;
-      case "COMPLAINT":
-        router.push(`/dashboard/admin/complaints`);
+      case "PAYMENT_RECEIVED":
+        router.push(`/dashboard/citizen/transactions`);
         break;
-      case "VEHICLE":
-        router.push(`/dashboard/vehicles`);
-        break;
-      case "LICENSE":
-        router.push(`/dashboard/licenses`);
+      case "DEBT_CREATED":
+      case "PENALTY_APPLIED":
+        router.push(`/dashboard/citizen/debts`);
         break;
       default:
         router.push(`/notifications`);
@@ -135,17 +145,27 @@ export default function NotificationDropdown() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "VIOLATION":
-        return AlertTriangle;
-      case "FINE":
-      case "PAYMENT":
-        return DollarSign;
-      case "COMPLAINT":
+      case "REPORT_SUBMITTED":
+      case "APPEAL_SUBMITTED":
         return FileText;
-      case "VEHICLE":
-        return Car;
-      case "LICENSE":
-        return Shield;
+      case "REPORT_APPROVED":
+      case "APPEAL_APPROVED":
+      case "SUCCESS":
+        return Check;
+      case "REPORT_REJECTED":
+      case "APPEAL_REJECTED":
+      case "ERROR":
+        return AlertTriangle;
+      case "REWARD_EARNED":
+      case "PAYMENT_RECEIVED":
+        return DollarSign;
+      case "PENALTY_APPLIED":
+      case "DEBT_CREATED":
+      case "WARNING":
+        return AlertTriangle;
+      case "INFO":
+      case "SYSTEM":
+        return Bell;
       default:
         return Bell;
     }
@@ -153,17 +173,26 @@ export default function NotificationDropdown() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "VIOLATION":
-        return "text-red-600";
-      case "FINE":
-        return "text-orange-600";
-      case "PAYMENT":
-        return "text-green-600";
-      case "COMPLAINT":
+      case "REPORT_SUBMITTED":
+      case "APPEAL_SUBMITTED":
+      case "INFO":
         return "text-blue-600";
-      case "VEHICLE":
-        return "text-purple-600";
-      case "LICENSE":
+      case "REPORT_APPROVED":
+      case "APPEAL_APPROVED":
+      case "SUCCESS":
+        return "text-green-600";
+      case "REPORT_REJECTED":
+      case "APPEAL_REJECTED":
+      case "ERROR":
+        return "text-red-600";
+      case "REWARD_EARNED":
+      case "PAYMENT_RECEIVED":
+        return "text-emerald-600";
+      case "PENALTY_APPLIED":
+      case "DEBT_CREATED":
+      case "WARNING":
+        return "text-orange-600";
+      case "SYSTEM":
         return "text-indigo-600";
       default:
         return "text-gray-600";

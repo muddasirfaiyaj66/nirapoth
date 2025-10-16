@@ -192,16 +192,62 @@ const adminUsersSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload.data.users;
-        state.totalUsers = action.payload.data.total;
-        state.currentPage = action.payload.data.page;
-        state.totalPages = Math.ceil(
-          action.payload.data.total / (action.payload.data.limit || 10)
+
+        // DEBUG: Log the actual response structure
+        console.log("🔍 [DEBUG] Full API Response:", action.payload);
+        console.log("🔍 [DEBUG] payload.data:", action.payload?.data);
+        console.log("🔍 [DEBUG] payload.users:", action.payload?.users);
+        console.log(
+          "🔍 [DEBUG] payload.data type:",
+          typeof action.payload?.data
         );
+
+        // Handle multiple response formats
+        const data = action.payload?.data || action.payload;
+        console.log("🔍 [DEBUG] Extracted data:", data);
+        console.log("🔍 [DEBUG] data.users:", data?.users);
+        console.log("🔍 [DEBUG] data type:", typeof data);
+        console.log("🔍 [DEBUG] Is data array?:", Array.isArray(data));
+
+        // Get users from various possible locations
+        let users = [];
+        if (Array.isArray(data)) {
+          users = data;
+          console.log("✅ Found users as direct array");
+        } else if (Array.isArray(data?.users)) {
+          users = data.users;
+          console.log("✅ Found users in data.users");
+        } else if (Array.isArray(data?.data)) {
+          users = data.data;
+          console.log("✅ Found users in data.data");
+        } else if (Array.isArray(action.payload?.users)) {
+          users = action.payload.users;
+          console.log("✅ Found users in payload.users");
+        } else {
+          console.log("❌ Could not find users array!");
+        }
+
+        state.users = users;
+        state.totalUsers =
+          data?.total || data?.pagination?.total || users.length || 0;
+        state.currentPage = data?.page || data?.pagination?.page || 1;
+        state.totalPages =
+          data?.pages ||
+          data?.pagination?.pages ||
+          Math.ceil((data?.total || users.length || 0) / (data?.limit || 10));
+
+        console.log("✅ [DEBUG] State updated:");
+        console.log("   - users count:", state.users?.length);
+        console.log("   - totalUsers:", state.totalUsers);
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch users";
+
+        // DEBUG: Log the error
+        console.error("❌ [DEBUG] Fetch users failed:", action.error);
+        console.error("❌ [DEBUG] Error message:", action.error.message);
+        console.error("❌ [DEBUG] Full payload:", action.payload);
       })
       // Block user
       .addCase(blockUser.pending, (state) => {

@@ -167,6 +167,24 @@ export const adminApi = {
     return response;
   },
 
+  createViolation: async (violationData: {
+    vehiclePlate: string;
+    violationType: string;
+    description: string;
+    location: {
+      latitude: number;
+      longitude: number;
+      address?: string;
+      city?: string;
+      district?: string;
+    };
+    evidenceUrl: string[];
+    fineAmount: number;
+  }) => {
+    const response = await api.post("/admin/violations", violationData);
+    return response;
+  },
+
   updateViolationStatus: async (violationId: string, status: string) => {
     const response = await api.post("/admin/violations/update-status", {
       violationId,

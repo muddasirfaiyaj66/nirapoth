@@ -65,6 +65,36 @@ export const fetchViolations = createAsyncThunk(
   }
 );
 
+export const createViolation = createAsyncThunk(
+  "violation/createViolation",
+  async (
+    violationData: {
+      vehiclePlate: string;
+      violationType: string;
+      description: string;
+      location: {
+        latitude: number;
+        longitude: number;
+        address?: string;
+        city?: string;
+        district?: string;
+      };
+      evidenceUrl: string[];
+      fineAmount: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await adminApi.createViolation(violationData);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to create violation"
+      );
+    }
+  }
+);
+
 export const updateViolationStatus = createAsyncThunk(
   "violation/updateStatus",
   async (
@@ -114,10 +144,28 @@ const violationSlice = createSlice({
       })
       .addCase(fetchViolations.fulfilled, (state, action) => {
         state.loading = false;
-        state.violations = action.payload.violations;
-        state.pagination = action.payload.pagination;
+        if (action.payload.data) {
+          state.violations = action.payload.data.violations;
+          state.pagination = action.payload.data.pagination;
+        }
       })
       .addCase(fetchViolations.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Create violation
+      .addCase(createViolation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createViolation.fulfilled, (state, action) => {
+        state.loading = false;
+        // Add the new violation to the beginning of the list
+        if (action.payload.data?.violation) {
+          state.violations.unshift(action.payload.data.violation);
+        }
+      })
+      .addCase(createViolation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

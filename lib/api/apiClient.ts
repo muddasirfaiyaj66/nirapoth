@@ -244,4 +244,6 @@ export const api = {
   },
 };
 
+// Export both default and named for flexibility
+export { apiClient };
 export default apiClient;

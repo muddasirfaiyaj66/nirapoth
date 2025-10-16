@@ -168,8 +168,14 @@ const citizenReportsSlice = createSlice({
       })
       .addCase(fetchMyReports.fulfilled, (state, action) => {
         state.loading = false;
-        state.reports = action.payload.reports;
-        state.pagination = action.payload.pagination;
+        state.reports = action.payload.reports || [];
+        // Safely handle pagination
+        state.pagination = action.payload.pagination || {
+          page: 1,
+          limit: 20,
+          total: action.payload.reports?.length || 0,
+          totalPages: 1,
+        };
       })
       .addCase(fetchMyReports.rejected, (state, action) => {
         state.loading = false;
@@ -204,7 +210,13 @@ const citizenReportsSlice = createSlice({
       .addCase(createReport.fulfilled, (state, action) => {
         state.loading = false;
         state.reports.unshift(action.payload);
-        state.pagination.total += 1;
+        // Safely update pagination
+        if (state.pagination) {
+          state.pagination.total = (state.pagination.total || 0) + 1;
+          state.pagination.totalPages = Math.ceil(
+            state.pagination.total / (state.pagination.limit || 20)
+          );
+        }
       })
       .addCase(createReport.rejected, (state, action) => {
         state.loading = false;
@@ -235,11 +247,15 @@ const citizenReportsSlice = createSlice({
       })
       // Review report (Police)
       .addCase(reviewReport.fulfilled, (state, action) => {
-        const index = state.reports.findIndex(
-          (r) => r.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.reports[index] = action.payload;
+        // Remove the reviewed report from the list since it's no longer pending
+        state.reports = state.reports.filter((r) => r.id !== action.payload.id);
+
+        // Update pagination safely
+        if (state.pagination) {
+          state.pagination.total = Math.max(0, state.pagination.total - 1);
+          state.pagination.totalPages = Math.ceil(
+            state.pagination.total / state.pagination.limit
+          );
         }
       });
   },

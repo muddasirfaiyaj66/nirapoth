@@ -65,7 +65,7 @@ import { UpdateUserRoleDialog } from "@/components/admin/UpdateUserRoleDialog";
 export default function AdminUsersPage() {
   const dispatch = useAppDispatch();
   const {
-    users,
+    users = [],
     loading,
     error,
     totalUsers,
@@ -276,7 +276,8 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter((u) => u.emailVerified && u.phoneVerified).length}
+              {users?.filter((u) => u.emailVerified && u.phoneVerified)
+                .length || 0}
             </div>
           </CardContent>
         </Card>
@@ -287,7 +288,7 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter((u) => u.isBlocked).length}
+              {users?.filter((u) => u.isBlocked).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -298,7 +299,7 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter((u) => !u.isBlocked && !u.isDeleted).length}
+              {users?.filter((u) => !u.isBlocked && !u.isDeleted).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -368,6 +369,10 @@ export default function AdminUsersPage() {
             <div className="text-center text-red-500 py-8">
               Failed to load users. Please try again.
             </div>
+          ) : users && users.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              No users found. Try adjusting your filters.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -382,7 +387,7 @@ export default function AdminUsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {users?.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">

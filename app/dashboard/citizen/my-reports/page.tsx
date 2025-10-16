@@ -32,6 +32,7 @@ import {
   Plus,
   Search,
   Filter,
+  AlertCircle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
@@ -77,9 +78,8 @@ export default function MyReportsPage() {
 
   // Load reports and stats on mount
   useEffect(() => {
-    loadReports();
     dispatch(fetchMyStats());
-  }, []);
+  }, [dispatch]);
 
   // Load reports when filters/pagination change
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function MyReportsPage() {
             Track your submitted violation reports and earnings
           </p>
         </div>
-        <Link href="/citizen/report-violation">
+        <Link href="/dashboard/citizen/report-violation">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Report
@@ -167,7 +167,7 @@ export default function MyReportsPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card key="total-reports">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Reports
@@ -175,11 +175,13 @@ export default function MyReportsPage() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalReports}</div>
+              <div className="text-2xl font-bold">
+                {stats.totalReports || 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card key="pending-review">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Pending Review
@@ -188,42 +190,63 @@ export default function MyReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {stats.pendingReports}
+                {stats.pendingReports || 0}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card key="approved">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Approved</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {stats.approvedReports}
+                {stats.approvedReports || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.approvalRate.toFixed(1)}% approval rate
+                {stats.approvalRate?.toFixed(1) || "0"}% approval rate
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card key="total-earnings">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Earnings
+                Net Earnings
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(stats.totalRewardsEarned)}
-              </div>
-              {stats.totalPenaltiesPaid > 0 && (
-                <p className="text-xs text-red-600 mt-1">
-                  -{formatCurrency(stats.totalPenaltiesPaid)} penalties
-                </p>
-              )}
+              {(() => {
+                const netEarnings =
+                  (stats.totalRewardsEarned || 0) -
+                  (stats.totalPenaltiesPaid || 0);
+                const isNegative = netEarnings < 0;
+                return (
+                  <>
+                    <div
+                      className={`text-2xl font-bold ${
+                        isNegative ? "text-red-600" : "text-green-600"
+                      }`}
+                    >
+                      {formatCurrency(netEarnings)}
+                    </div>
+                    {stats.totalRewardsEarned > 0 &&
+                      stats.totalPenaltiesPaid > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                          <p className="text-green-600">
+                            +{formatCurrency(stats.totalRewardsEarned)} rewards
+                          </p>
+                          <p className="text-red-600">
+                            -{formatCurrency(stats.totalPenaltiesPaid)}{" "}
+                            penalties
+                          </p>
+                        </div>
+                      )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
@@ -279,7 +302,7 @@ export default function MyReportsPage() {
             <p className="text-muted-foreground mb-4">
               Start reporting traffic violations and earn rewards!
             </p>
-            <Link href="/citizen/report-violation">
+            <Link href="/dashboard/citizen/report-violation">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Submit First Report
@@ -290,7 +313,7 @@ export default function MyReportsPage() {
       ) : (
         <div className="space-y-4">
           {reports.map((report) => {
-            const StatusIcon = STATUS_ICONS[report.status];
+            const StatusIcon = STATUS_ICONS[report.status] || Clock;
             return (
               <Card
                 key={report.id}
@@ -306,14 +329,16 @@ export default function MyReportsPage() {
                         <Badge
                           variant="secondary"
                           className={`${
-                            STATUS_COLORS[report.status]
+                            STATUS_COLORS[report.status] || "bg-gray-500"
                           } text-white`}
                         >
-                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {StatusIcon && (
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                          )}
                           {report.status}
                         </Badge>
                         <Badge variant="outline">
-                          {report.violationType.replace("_", " ")}
+                          {report.violationType?.replace("_", " ") || "N/A"}
                         </Badge>
                       </div>
 
@@ -357,6 +382,50 @@ export default function MyReportsPage() {
                         </div>
                       )}
 
+                      {/* Appeal Status */}
+                      {report.status === "REJECTED" &&
+                        (report as any).appealSubmitted && (
+                          <div
+                            className={`p-3 rounded-lg ${
+                              (report as any).appealStatus === "APPROVED"
+                                ? "bg-green-50 dark:bg-green-950"
+                                : (report as any).appealStatus === "REJECTED"
+                                ? "bg-red-50 dark:bg-red-950"
+                                : "bg-yellow-50 dark:bg-yellow-950"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  (report as any).appealStatus === "APPROVED"
+                                    ? "border-green-600 text-green-600"
+                                    : (report as any).appealStatus ===
+                                      "REJECTED"
+                                    ? "border-red-600 text-red-600"
+                                    : "border-yellow-600 text-yellow-600"
+                                }
+                              >
+                                Appeal {(report as any).appealStatus}
+                              </Badge>
+                            </div>
+                            {(report as any).appealStatus === "REJECTED" &&
+                              (report as any).additionalPenaltyAmount && (
+                                <p className="text-sm text-red-600 font-medium">
+                                  Additional Penalty:{" "}
+                                  {formatCurrency(
+                                    (report as any).additionalPenaltyAmount
+                                  )}
+                                </p>
+                              )}
+                            {(report as any).appealNotes && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {(report as any).appealNotes}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
                       {report.reviewNotes && (
                         <div className="bg-accent p-3 rounded-lg">
                           <p className="text-sm font-medium mb-1">
@@ -369,14 +438,30 @@ export default function MyReportsPage() {
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDetails(report)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
+                    <div className="flex gap-2">
+                      {/* Show Appeal Button for rejected reports that haven't been appealed */}
+                      {report.status === "REJECTED" &&
+                        !(report as any).appealSubmitted && (
+                          <Link href="/dashboard/citizen/appeals">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Appeal
+                            </Button>
+                          </Link>
+                        )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(report)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -451,7 +536,7 @@ export default function MyReportsPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {selectedReport.evidenceUrl.map((url, index) => (
                         <div
-                          key={index}
+                          key={url || index}
                           className="relative aspect-video rounded-lg overflow-hidden border"
                         >
                           {url.includes("video") || url.includes(".mp4") ? (
@@ -487,7 +572,7 @@ export default function MyReportsPage() {
                     Violation Type
                   </p>
                   <p className="font-medium">
-                    {selectedReport.violationType.replace("_", " ")}
+                    {selectedReport.violationType?.replace("_", " ") || "N/A"}
                   </p>
                 </div>
                 <div>
@@ -542,6 +627,106 @@ export default function MyReportsPage() {
                   )}
                 </div>
               )}
+
+              {/* Appeal Info */}
+              {selectedReport.status === "REJECTED" &&
+                (selectedReport as any).appealSubmitted && (
+                  <div
+                    className={`p-4 rounded-lg border ${
+                      (selectedReport as any).appealStatus === "APPROVED"
+                        ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
+                        : (selectedReport as any).appealStatus === "REJECTED"
+                        ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
+                        : "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800"
+                    }`}
+                  >
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      Appeal Status
+                      <Badge
+                        variant="outline"
+                        className={
+                          (selectedReport as any).appealStatus === "APPROVED"
+                            ? "border-green-600 text-green-600"
+                            : (selectedReport as any).appealStatus ===
+                              "REJECTED"
+                            ? "border-red-600 text-red-600"
+                            : "border-yellow-600 text-yellow-600"
+                        }
+                      >
+                        {(selectedReport as any).appealStatus}
+                      </Badge>
+                    </h4>
+
+                    {(selectedReport as any).appealReason && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium mb-1">
+                          Your Appeal Reason:
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedReport as any).appealReason}
+                        </p>
+                      </div>
+                    )}
+
+                    {(selectedReport as any).appealNotes && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium mb-1">
+                          Review Response:
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedReport as any).appealNotes}
+                        </p>
+                      </div>
+                    )}
+
+                    {(selectedReport as any).appealStatus === "REJECTED" &&
+                      (selectedReport as any).additionalPenaltyAmount && (
+                        <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg mt-2">
+                          <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                            Additional Penalty Applied:{" "}
+                            {formatCurrency(
+                              (selectedReport as any).additionalPenaltyAmount
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            1.5% additional penalty for unsuccessful appeal
+                          </p>
+                        </div>
+                      )}
+
+                    {(selectedReport as any).appealReviewedAt && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Appeal reviewed on{" "}
+                        {formatDate((selectedReport as any).appealReviewedAt)}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              {/* Appeal Action Button */}
+              {selectedReport.status === "REJECTED" &&
+                !(selectedReport as any).appealSubmitted && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                          Disagree with this decision?
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                          You can submit an appeal with supporting evidence.
+                          Appeals are reviewed by police within 7 days.
+                        </p>
+                        <Link href="/dashboard/citizen/appeals">
+                          <Button className="bg-blue-600 hover:bg-blue-700">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Submit Appeal
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
             </div>
           )}
         </DialogContent>

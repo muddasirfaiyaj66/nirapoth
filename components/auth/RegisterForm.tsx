@@ -123,35 +123,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nidNo">NID Number (Optional)</Label>
-            <Input
-              id="nidNo"
-              {...register("nidNo")}
-              placeholder="1234567890"
-              disabled={isLoading}
-            />
-            {errors.nidNo && (
-              <p className="text-sm text-red-500">{errors.nidNo.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="birthCertificateNo">
-              Birth Certificate Number (Optional)
-            </Label>
-            <Input
-              id="birthCertificateNo"
-              {...register("birthCertificateNo")}
-              placeholder="12345678901234567"
-              disabled={isLoading}
-            />
-            {errors.birthCertificateNo && (
-              <p className="text-sm text-red-500">
-                {errors.birthCertificateNo.message}
-              </p>
-            )}
-          </div>
+          {/* NID and Birth Certificate are optional and collected later via profile update; removed from signup form */}
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
