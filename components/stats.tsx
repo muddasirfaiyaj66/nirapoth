@@ -7,7 +7,7 @@ export function Stats() {
   ];
 
   return (
-    <section className="border-y border-border/50 bg-gradient-to-r from-muted/30 to-muted/10 py-16">
+    <section className="border-y border-border/50 bg-card dark:bg-transparent py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {stats.map((stat, index) => (
@@ -17,7 +17,7 @@ export function Stats() {
               >
                 {stat.value}
               </div>
-              <div className="text-sm text-muted-foreground font-medium">
+              <div className="text-sm text-foreground/60 font-medium">
                 {stat.label}
               </div>
             </div>

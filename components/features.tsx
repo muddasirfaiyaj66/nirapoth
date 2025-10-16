@@ -1,4 +1,11 @@
-import { Camera, Zap, Users, Shield, AlertTriangle, FileText } from "lucide-react"
+import {
+  Camera,
+  Zap,
+  Users,
+  Shield,
+  AlertTriangle,
+  FileText,
+} from "lucide-react";
 
 export function Features() {
   const features = [
@@ -35,17 +42,21 @@ export function Features() {
     {
       icon: FileText,
       title: "Transparent Appeals",
-      description: "Vehicle owners can dispute fines. Police review appeals to ensure fair and accurate enforcement.",
+      description:
+        "Vehicle owners can dispute fines. Police review appeals to ensure fair and accurate enforcement.",
     },
-  ]
+  ];
 
   return (
-    <section id="features" className="py-24">
+    <section id="features" className="py-24 bg-card dark:bg-transparent">
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold md:text-5xl">Comprehensive Road Safety Features</h2>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            A complete ecosystem for monitoring, enforcement, and citizen engagement
+          <h2 className="mb-4 text-4xl font-bold md:text-5xl text-foreground">
+            Comprehensive Road Safety Features
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-foreground/70">
+            A complete ecosystem for monitoring, enforcement, and citizen
+            engagement
           </p>
         </div>
 
@@ -53,17 +64,19 @@ export function Features() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group rounded-lg border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+              className="group rounded-lg border border-border/50 bg-muted/30 p-6 transition-all hover:border-primary/50 hover:shadow-lg"
             >
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <feature.icon className="h-6 w-6" />
               </div>
-              <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <h3 className="mb-2 text-xl font-semibold text-foreground">
+                {feature.title}
+              </h3>
+              <p className="text-foreground/70">{feature.description}</p>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }

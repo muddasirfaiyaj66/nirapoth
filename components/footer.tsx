@@ -1,155 +1,203 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Facebook, Twitter, Linkedin, Mail } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/50 bg-gradient-to-b from-muted/30 to-muted/10">
+    <footer className="bg-white dark:bg-emerald-900 border-t border-gray-200 dark:border-emerald-800">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid gap-8 md:grid-cols-4">
-          <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="relative">
-                <Image
-                  src="/logo.png"
-                  alt="NiraPoth"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
+        <div className="grid gap-12 md:grid-cols-4">
+          {/* Brand Section */}
+          <div className="space-y-4">
+            <Link href="/" className="inline-block group">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Image
+                    src="/logo.png"
+                    alt="NiraPoth"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+                <span className="font-bold text-xl bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-400 dark:to-emerald-300 bg-clip-text text-transparent">
+                  NiraPoth
+                </span>
               </div>
-              <span className="font-bold text-lg text-green-gradient">
-                NiraPoth
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">
+            </Link>
+            <p className="text-sm text-gray-600 dark:text-white/80 leading-relaxed max-w-xs">
               Making roads safer through technology and transparency
             </p>
-            <div className="mt-6 flex gap-4">
-              <Link
-                href="#"
-                className="group text-muted-foreground hover:text-primary transition-all duration-300"
-              >
-                <div className="p-2 rounded-full bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                  <Facebook className="h-5 w-5" />
+
+            {/* Social Links */}
+            <div className="flex gap-3 pt-2">
+              <Link href="#" className="group" aria-label="Facebook">
+                <div className="p-2.5 rounded-lg bg-gray-100 dark:bg-emerald-800 hover:bg-gray-200 dark:hover:bg-emerald-700 transition-all duration-300 group-hover:scale-110">
+                  <Facebook className="h-4 w-4 text-gray-700 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors" />
                 </div>
               </Link>
-              <Link
-                href="#"
-                className="group text-muted-foreground hover:text-primary transition-all duration-300"
-              >
-                <div className="p-2 rounded-full bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                  <Twitter className="h-5 w-5" />
+              <Link href="#" className="group" aria-label="Twitter">
+                <div className="p-2.5 rounded-lg bg-gray-100 dark:bg-emerald-800 hover:bg-gray-200 dark:hover:bg-emerald-700 transition-all duration-300 group-hover:scale-110">
+                  <Twitter className="h-4 w-4 text-gray-700 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors" />
                 </div>
               </Link>
-              <Link
-                href="#"
-                className="group text-muted-foreground hover:text-primary transition-all duration-300"
-              >
-                <div className="p-2 rounded-full bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                  <Linkedin className="h-5 w-5" />
+              <Link href="#" className="group" aria-label="LinkedIn">
+                <div className="p-2.5 rounded-lg bg-gray-100 dark:bg-emerald-800 hover:bg-gray-200 dark:hover:bg-emerald-700 transition-all duration-300 group-hover:scale-110">
+                  <Linkedin className="h-4 w-4 text-gray-700 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors" />
                 </div>
               </Link>
-              <Link
-                href="#"
-                className="group text-muted-foreground hover:text-primary transition-all duration-300"
-              >
-                <div className="p-2 rounded-full bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                  <Mail className="h-5 w-5" />
+              <Link href="#" className="group" aria-label="Email">
+                <div className="p-2.5 rounded-lg bg-gray-100 dark:bg-emerald-800 hover:bg-gray-200 dark:hover:bg-emerald-700 transition-all duration-300 group-hover:scale-110">
+                  <Mail className="h-4 w-4 text-gray-700 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors" />
                 </div>
               </Link>
             </div>
           </div>
 
+          {/* Product Links */}
           <div>
-            <h3 className="mb-4 font-semibold">Product</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="mb-6 font-semibold text-gray-900 dark:text-white text-base">
+              Product
+            </h3>
+            <ul className="space-y-3.5">
               <li>
                 <Link
                   href="#features"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   Features
                 </Link>
               </li>
               <li>
                 <Link
                   href="#how-it-works"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   How It Works
                 </Link>
               </li>
               <li>
                 <Link
                   href="#stakeholders"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   For Stakeholders
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
+                  Pricing
                 </Link>
               </li>
             </ul>
           </div>
 
+          {/* Resources Links */}
           <div>
-            <h3 className="mb-4 font-semibold">Resources</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="mb-6 font-semibold text-gray-900 dark:text-white text-base">
+              Resources
+            </h3>
+            <ul className="space-y-3.5">
               <li>
                 <Link
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   Documentation
                 </Link>
               </li>
               <li>
                 <Link
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   API Reference
                 </Link>
               </li>
               <li>
                 <Link
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 flex items-center gap-2 group"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-primary/30 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
                   Support
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-2 group"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:bg-emerald-700 dark:group-hover:bg-emerald-300 transition-colors duration-200"></div>
+                  Blog
                 </Link>
               </li>
             </ul>
           </div>
 
+          {/* Contact Section */}
           <div>
-            <h3 className="mb-4 font-semibold">Contact</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="text-muted-foreground flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary/60" />
-                Email: info@nirapodpoth.gov.bd
+            <h3 className="mb-6 font-semibold text-gray-900 dark:text-white text-base">
+              Contact
+            </h3>
+            <ul className="space-y-4">
+              <li>
+                <a
+                  href="mailto:info@nirapodpoth.gov.bd"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-start gap-3 group"
+                >
+                  <Mail className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span className="break-all">info@nirapodpoth.gov.bd</span>
+                </a>
               </li>
-              <li className="text-muted-foreground flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                  📞
-                </span>
-                Phone: +880 1234-567890
+              <li>
+                <a
+                  href="tel:+8801234567890"
+                  className="text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 flex items-center gap-3 group"
+                >
+                  <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                  <span>+880 1234-567890</span>
+                </a>
               </li>
-              <li className="text-muted-foreground">
-                Address: Dhaka, Bangladesh
+              <li className="text-sm text-gray-700 dark:text-white/70 flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                <span>Dhaka, Bangladesh</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 NiraPoth (নিরাপথ). All rights reserved.</p>
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-emerald-700">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-600 dark:text-white/60 text-center md:text-left">
+              &copy; {new Date().getFullYear()} NiraPoth (নিরাপথ). All rights
+              reserved.
+            </p>
+            <div className="flex gap-6 text-sm">
+              <Link
+                href="#"
+                className="text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="#"
+                className="text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+              >
+                Terms of Service
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

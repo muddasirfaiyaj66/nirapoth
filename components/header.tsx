@@ -24,7 +24,7 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-xl shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dark:border-border/50 bg-white dark:bg-background/80 backdrop-blur-xl shadow-sm dark:supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative">
@@ -58,25 +58,25 @@ export function Header() {
         <nav className="hidden items-center gap-6 md:flex">
           <Link
             href="/#features"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-green-100 dark:hover:bg-transparent px-3 py-2 rounded-md"
           >
             Features
           </Link>
           <Link
             href="/#how-it-works"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-green-100 dark:hover:bg-transparent px-3 py-2 rounded-md"
           >
             How It Works
           </Link>
           <Link
             href="/#stakeholders"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-green-100 dark:hover:bg-transparent px-3 py-2 rounded-md"
           >
             For Stakeholders
           </Link>
           <Link
             href="/maps"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-green-100 dark:hover:bg-transparent px-3 py-2 rounded-md"
           >
             Traffic Maps
           </Link>
@@ -92,8 +92,8 @@ export function Header() {
             >
               <DropdownMenuTrigger asChild>
                 <div
-                  className={`relative h-10 w-10 rounded-full hover:bg-accent cursor-pointer flex items-center justify-center ${
-                    dropdownOpen ? "bg-accent" : ""
+                  className={`relative h-10 w-10 rounded-full hover:bg-green-100 dark:hover:bg-accent cursor-pointer flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
+                    dropdownOpen ? "bg-green-100 dark:bg-accent" : ""
                   }`}
                 >
                   <Avatar className="h-10 w-10">
@@ -162,14 +162,14 @@ export function Header() {
           ) : (
             <>
               <Link href="/login">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="hover:bg-primary dark:text-white dark:border-white/60 dark:hover:bg-primary">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
                 <Button
                   size="sm"
-                  className="bg-green-gradient text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-md hover:shadow-lg transition-all duration-300"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-white shadow-md hover:shadow-lg transition-all duration-300 font-semibold"
                 >
                   Get Started
                 </Button>
@@ -288,7 +288,7 @@ export function Header() {
                 <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     size="sm"
-                    className="w-full bg-green-gradient text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-md hover:shadow-lg transition-all duration-300"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 font-semibold"
                   >
                     Get Started
                   </Button>
