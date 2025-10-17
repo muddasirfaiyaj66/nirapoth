@@ -3,7 +3,7 @@
 // TEMPORARY: Hardcoded until Next.js env var issue is resolved
 
 export const GOOGLE_MAPS_CONFIG = {
-  apiKey: "AIzaSyApG0jnhmwKVa_m14DR6bHjEvC-dHArT1A",
+  apiKey: ,
 } as const;
 
 // Helper to check if API key is configured
