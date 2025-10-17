@@ -1,64 +1,62 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  Shield,
   AlertTriangle,
-  Camera,
   FileText,
-  Activity,
+  DollarSign,
   CheckCircle,
   Clock,
+  AlertCircle,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Skeleton } from "@/components/ui/loading-skeleton";
 import { DashboardWrapper } from "@/components/dashboard/DashboardWrapper";
-
-interface PoliceStats {
-  totalViolations: number;
-  pendingViolations: number;
-  resolvedViolations: number;
-  activePatrols: number;
-  emergencyCalls: number;
-  completedReports: number;
-}
+import { toast } from "sonner";
+import { policeApi, PoliceStats, PoliceAnalytics } from "@/lib/api/police";
 
 export default function PoliceDashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const [stats, setStats] = useState<PoliceStats | null>(null);
+  const [analytics, setAnalytics] = useState<PoliceAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for now - replace with actual API calls
-  const stats: PoliceStats = {
-    totalViolations: 156,
-    pendingViolations: 23,
-    resolvedViolations: 133,
-    activePatrols: 8,
-    emergencyCalls: 5,
-    completedReports: 89,
+  useEffect(() => {
+    if (user && user.role === "POLICE") {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [statsResponse, analyticsResponse] = await Promise.all([
+        policeApi.getStats(),
+        policeApi.getAnalytics(),
+      ]);
+
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+        console.log("✅ Police stats loaded:", statsResponse.data);
+      }
+
+      if (analyticsResponse.success && analyticsResponse.data) {
+        setAnalytics(analyticsResponse.data);
+        console.log("✅ Police analytics loaded:", analyticsResponse.data);
+      }
+    } catch (error) {
+      console.error("Failed to load police dashboard:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const recentViolations = [
-    {
-      id: "1",
-      plateNo: "DHA-1234",
-      violation: "Speeding",
-      location: "Dhanmondi 27",
-      time: new Date().toISOString(),
-      status: "PENDING",
-    },
-    {
-      id: "2",
-      plateNo: "DHA-5678",
-      violation: "Red light violation",
-      location: "Gulshan 1",
-      time: new Date(Date.now() - 3600000).toISOString(),
-      status: "CONFIRMED",
-    },
-  ];
-
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -79,13 +77,13 @@ export default function PoliceDashboardPage() {
     );
   }
 
-  if (!user) {
+  if (!user || user.role !== "POLICE") {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
           <p className="text-muted-foreground">
-            Please log in to access the police dashboard.
+            This dashboard is only accessible to police officers.
           </p>
         </div>
       </div>
@@ -95,10 +93,13 @@ export default function PoliceDashboardPage() {
   return (
     <DashboardWrapper
       title="Police Dashboard"
-      description={`Welcome back, Officer ${user?.firstName}! Monitor traffic violations and manage patrols.`}
+      description={`Welcome back, Officer ${user?.firstName}! Monitor violations and manage fines.`}
     >
       <div className="flex items-center justify-end mb-4">
-        <Badge variant="secondary">Police Officer</Badge>
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          <Shield className="h-3 w-3 mr-1" />
+          Police Officer
+        </Badge>
       </div>
 
       {/* Key Metrics */}
@@ -106,30 +107,46 @@ export default function PoliceDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Violations
+              Pending Violations
             </CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalViolations}</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {stats.pendingViolations} pending review
+            <div className="text-2xl font-bold text-orange-600">
+              {stats?.pendingViolations || 0}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Awaiting review
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Resolved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Resolved Violations
+            </CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.resolvedViolations}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats?.resolvedViolations || 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Verified cases</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Fines Issued</CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.totalFinesIssued || 0}
+            </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {Math.round(
-                (stats.resolvedViolations / stats.totalViolations) * 100
-              )}
-              % success rate
+              {stats?.paidFines || 0} paid • {stats?.unpaidFines || 0} unpaid
             </div>
           </CardContent>
         </Card>
@@ -137,168 +154,93 @@ export default function PoliceDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Patrols
+              Citizen Reports
             </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activePatrols}</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Currently on duty
+            <div className="text-2xl font-bold">
+              {stats?.pendingReports || 0}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Emergency Calls
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.emergencyCalls}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              Today's calls
+              {stats?.approvedReports || 0} approved
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Violations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Violations</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Recent Violations */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Violations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats?.recentViolations && stats.recentViolations.length > 0 ? (
             <div className="space-y-4">
-              {recentViolations.map((violation) => (
+              {stats.recentViolations.map((violation) => (
                 <div
                   key={violation.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-4 border rounded-lg"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{violation.plateNo}</span>
-                      <Badge
-                        variant={
-                          violation.status === "PENDING"
-                            ? "secondary"
-                            : "destructive"
-                        }
-                      >
-                        {violation.status}
-                      </Badge>
+                  <div className="flex items-center gap-4">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <div>
+                      <p className="font-semibold">{violation.plateNo}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {violation.vehicleInfo}
+                      </p>
                     </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{violation.violation}</p>
                     <p className="text-sm text-muted-foreground">
-                      {violation.violation} - {violation.location}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(violation.time).toLocaleString()}
+                      ৳{violation.penalty}
                     </p>
                   </div>
+                  <Badge
+                    variant={
+                      violation.status === "VERIFIED" ? "default" : "secondary"
+                    }
+                  >
+                    {violation.status}
+                  </Badge>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No recent violations
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
-              <Shield className="mr-2 h-4 w-4" />
-              Report New Violation
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+              <AlertTriangle className="h-6 w-6" />
+              <span>View Violations</span>
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Camera className="mr-2 h-4 w-4" />
-              View Camera Feeds
+            <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+              <DollarSign className="h-6 w-6" />
+              <span>Issue Fine</span>
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Report
+            <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+              <FileText className="h-6 w-6" />
+              <span>Review Reports</span>
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Activity className="mr-2 h-4 w-4" />
-              Start Patrol
+            <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+              <AlertCircle className="h-6 w-6" />
+              <span>Emergency Response</span>
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Today's Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Violations Reported</span>
-              <Badge variant="default">{stats.totalViolations}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Pending Review</span>
-              <Badge variant="destructive">{stats.pendingViolations}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Completed Reports</span>
-              <Badge variant="default">{stats.completedReports}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">System Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Camera Network</span>
-              <Badge variant="default" className="bg-green-500">
-                Online
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Database</span>
-              <Badge variant="default" className="bg-green-500">
-                Healthy
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Emergency Line</span>
-              <Badge variant="default" className="bg-green-500">
-                Active
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Response Time</span>
-              <Badge variant="default">&lt; 2 min</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Accuracy Rate</span>
-              <Badge variant="default">94.2%</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Uptime</span>
-              <Badge variant="default">99.1%</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </DashboardWrapper>
   );
 }

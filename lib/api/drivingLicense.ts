@@ -1,26 +1,24 @@
-import api from "./auth";
+import apiClient from "./apiClient";
 
-// Types
 export interface DrivingLicense {
   id: string;
   licenseNo: string;
   citizenId: string;
-  category:
-    | "LIGHT_VEHICLE"
-    | "MOTORCYCLE"
-    | "LIGHT_VEHICLE_MOTORCYCLE"
-    | "HEAVY_VEHICLE"
-    | "PSV"
-    | "GOODS_VEHICLE";
+  category: string;
   issueDate: string;
   expiryDate: string;
   issuingAuthority: string;
+  gems: number;
+  isBlacklisted: boolean;
+  blacklistedAt?: string;
+  blacklistReason?: string;
+  blacklistPenaltyPaid: boolean;
   isActive: boolean;
   isVerified: boolean;
   verifiedBy?: string;
   verifiedAt?: string;
-  restrictions?: string[];
-  endorsements?: string[];
+  restrictions: string[];
+  endorsements: string[];
   violationCount: number;
   lastViolationAt?: string;
   isSuspended: boolean;
@@ -28,23 +26,21 @@ export interface DrivingLicense {
   suspensionReason?: string;
   createdAt: string;
   updatedAt: string;
-  citizen?: {
+  citizen: {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber: string;
+    profileImage?: string;
+    dateOfBirth?: string;
+    address?: string;
   };
 }
 
-export interface CreateLicenseData {
+export interface CreateDrivingLicenseDTO {
   licenseNo: string;
-  category:
-    | "LIGHT_VEHICLE"
-    | "MOTORCYCLE"
-    | "LIGHT_VEHICLE_MOTORCYCLE"
-    | "HEAVY_VEHICLE"
-    | "PSV"
-    | "GOODS_VEHICLE";
+  category: string;
   issueDate: string;
   expiryDate: string;
   issuingAuthority: string;
@@ -52,99 +48,136 @@ export interface CreateLicenseData {
   endorsements?: string[];
 }
 
-export interface SuspendLicenseData {
-  suspendedUntil: string;
-  reason: string;
-}
-
-export interface LicenseSearchParams {
-  page?: number;
-  limit?: number;
-  search?: string;
+export interface UpdateDrivingLicenseDTO {
   category?: string;
-  status?: string;
+  expiryDate?: string;
+  restrictions?: string[];
+  endorsements?: string[];
+  isActive?: boolean;
 }
 
-// API functions
 export const drivingLicenseApi = {
-  // Get user's licenses
-  getUserLicenses: async () => {
-    const response = await api.get("/driving-license/my-licenses");
+  // Create a new driving license
+  async createLicense(data: CreateDrivingLicenseDTO): Promise<{
+    success: boolean;
+    message: string;
+    data: DrivingLicense;
+  }> {
+    const response = await apiClient.post("/driving-licenses", data);
     return response.data;
   },
 
-  // Get citizen's licenses
-  getCitizenLicenses: async (citizenId: string) => {
-    const response = await api.get(`/driving-license/citizen/${citizenId}`);
-    return response.data;
+  // Get current user's driving license
+  async getMyLicense(): Promise<{
+    success: boolean;
+    data?: DrivingLicense;
+    message?: string;
+  }> {
+    try {
+      const response = await apiClient.get("/driving-licenses/my-license");
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return {
+          success: false,
+          message: "No driving license found",
+        };
+      }
+      throw error;
+    }
   },
 
-  // Add new driving license for citizen
-  addLicense: async (citizenId: string, data: CreateLicenseData) => {
-    const response = await api.post(
-      `/driving-license/citizen/${citizenId}`,
-      data
-    );
-    return response.data;
-  },
-
-  // Add new driving license for current user
-  addMyLicense: async (data: CreateLicenseData) => {
-    const response = await api.post("/driving-license/my-licenses", data);
-    return response.data;
-  },
-
-  // Verify driving license
-  verifyLicense: async (licenseId: string) => {
-    const response = await api.put(`/driving-license/${licenseId}/verify`);
-    return response.data;
-  },
-
-  // Suspend driving license
-  suspendLicense: async (licenseId: string, data: SuspendLicenseData) => {
-    const response = await api.put(
-      `/driving-license/${licenseId}/suspend`,
-      data
-    );
-    return response.data;
-  },
-
-  // Reactivate driving license
-  reactivateLicense: async (licenseId: string) => {
-    const response = await api.put(`/driving-license/${licenseId}/reactivate`);
-    return response.data;
-  },
-
-  // Get all licenses (Admin/Police only)
-  getAllLicenses: async (params?: LicenseSearchParams) => {
-    const response = await api.get("/driving-license", { params });
-    return response.data;
-  },
-
-  // Get license by ID
-  getLicenseById: async (licenseId: string) => {
-    const response = await api.get(`/driving-license/${licenseId}`);
-    return response.data;
-  },
-
-  // Update license
-  updateLicense: async (
+  // Update driving license
+  async updateLicense(
     licenseId: string,
-    data: Partial<CreateLicenseData>
-  ) => {
-    const response = await api.put(`/driving-license/${licenseId}`, data);
+    data: UpdateDrivingLicenseDTO
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: DrivingLicense;
+  }> {
+    const response = await apiClient.patch(
+      `/driving-licenses/${licenseId}`,
+      data
+    );
     return response.data;
   },
 
-  // Delete license
-  deleteLicense: async (licenseId: string) => {
-    const response = await api.delete(`/driving-license/${licenseId}`);
+  // Get license by ID (Admin/Police)
+  async getLicenseById(licenseId: string): Promise<{
+    success: boolean;
+    data: DrivingLicense;
+  }> {
+    const response = await apiClient.get(`/driving-licenses/${licenseId}`);
     return response.data;
   },
 
-  // Get license statistics
-  getLicenseStats: async () => {
-    const response = await api.get("/driving-license/stats");
+  // Get license by license number (Admin/Police)
+  async getLicenseByLicenseNo(licenseNo: string): Promise<{
+    success: boolean;
+    data: DrivingLicense;
+  }> {
+    const response = await apiClient.get(
+      `/driving-licenses/by-license-no/${licenseNo}`
+    );
+    return response.data;
+  },
+
+  // Check license validity
+  async checkValidity(licenseId: string): Promise<{
+    success: boolean;
+    data: {
+      valid: boolean;
+      reason?: string;
+    };
+  }> {
+    const response = await apiClient.get(
+      `/driving-licenses/${licenseId}/validity`
+    );
+    return response.data;
+  },
+
+  // Deduct gems (Police only)
+  async deductGems(
+    licenseId: string,
+    gemsToDeduct: number,
+    reason: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      license: DrivingLicense;
+      blacklisted: boolean;
+      remainingGems: number;
+    };
+  }> {
+    const response = await apiClient.post(
+      `/driving-licenses/${licenseId}/deduct-gems`,
+      {
+        gemsToDeduct,
+        reason,
+      }
+    );
+    return response.data;
+  },
+
+  // Get blacklisted licenses (Admin/Police)
+  async getBlacklistedLicenses(): Promise<{
+    success: boolean;
+    data: DrivingLicense[];
+  }> {
+    const response = await apiClient.get("/driving-licenses/blacklisted");
+    return response.data;
+  },
+
+  // Pay blacklist penalty
+  async payBlacklistPenalty(licenseId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await apiClient.post(
+      `/driving-licenses/${licenseId}/pay-blacklist-penalty`
+    );
     return response.data;
   },
 };

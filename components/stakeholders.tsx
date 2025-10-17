@@ -54,39 +54,42 @@ export function Stakeholders() {
   ];
 
   return (
-    <section id="stakeholders" className="py-24 bg-card dark:bg-transparent">
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold md:text-5xl text-foreground">
+    <section
+      id="stakeholders"
+      className="py-12 sm:py-16 md:py-24 bg-card dark:bg-transparent"
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 sm:mb-16 text-center">
+          <h2 className="mb-3 sm:mb-4 text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">
             Built for Every Stakeholder
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-foreground/70">
+          <p className="mx-auto max-w-2xl text-base sm:text-lg text-foreground/70 px-4 sm:px-0">
             Customized dashboards and features for each user type
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 md:gap-8 md:grid-cols-2">
           {stakeholders.map((stakeholder, index) => (
             <div
               key={index}
-              className="rounded-lg border border-border/50 bg-muted/30 p-8"
+              className="rounded-lg border border-border/50 bg-muted/30 p-5 sm:p-6 md:p-8"
             >
-              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <stakeholder.icon className="h-7 w-7" />
+              <div className="mb-3 sm:mb-4 inline-flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <stakeholder.icon className="h-6 w-6 sm:h-7 sm:w-7" />
               </div>
-              <h3 className="mb-3 text-2xl font-semibold text-foreground">
+              <h3 className="mb-2 sm:mb-3 text-xl sm:text-2xl font-semibold text-foreground">
                 {stakeholder.title}
               </h3>
-              <p className="mb-6 text-foreground/70">
+              <p className="mb-4 sm:mb-6 text-sm sm:text-base text-foreground/70">
                 {stakeholder.description}
               </p>
-              <ul className="mb-6 space-y-2">
+              <ul className="mb-4 sm:mb-6 space-y-2">
                 {stakeholder.features.map((feature, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2 text-sm text-foreground/80"
+                    className="flex items-center gap-2 text-xs sm:text-sm text-foreground/80"
                   >
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
                     <span>{feature}</span>
                   </li>
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/validations/auth";
@@ -18,7 +18,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -26,8 +26,11 @@ interface LoginFormProps {
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error } = useAuth();
+  const { login, getCurrentUser, isLoading, error } = useAuth();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
 
   const {
     register,
@@ -38,10 +41,57 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    setErrorMessage(null);
     const result = await login(data);
     if (result.success) {
       onSuccess?.();
-      router.push("/dashboard");
+
+      // Fetch current user to get role
+      const userResult = await getCurrentUser();
+
+      if (userResult.success && userResult.user) {
+        const role = userResult.user.role;
+
+        // Determine the target URL
+        let targetUrl = redirectUrl || "/dashboard";
+
+        // Override with role-specific dashboard if no redirect URL
+        if (!redirectUrl) {
+          if (role === "CITIZEN") {
+            targetUrl = "/dashboard/citizen";
+          } else if (role === "POLICE") {
+            targetUrl = "/dashboard/police";
+          } else if (role === "FIRE_SERVICE") {
+            targetUrl = "/dashboard/fire-service";
+          } else if (role === "ADMIN" || role === "SUPER_ADMIN") {
+            targetUrl = "/dashboard";
+          }
+        }
+
+        // Use window.location for a hard navigation to ensure cookie is properly set
+        // This also ensures the middleware runs with the new cookie
+        window.location.href = targetUrl;
+      } else {
+        // If we can't get user info, fallback to dashboard with hard navigation
+        window.location.href = redirectUrl || "/dashboard";
+      }
+    } else {
+      // Map known backend errors to user-friendly messages
+      const raw = (result as any)?.error || error;
+      const normalized = typeof raw === "string" ? raw : raw?.message || "";
+      if (/invalid credentials|unauthorized|wrong password/i.test(normalized)) {
+        setErrorMessage("Invalid email or password. Please try again.");
+      } else if (
+        /email not verified|verify email|unverified/i.test(normalized)
+      ) {
+        setErrorMessage(
+          "Your email is not verified. Please check your inbox for the verification email."
+        );
+      } else if (/user not found|no account/i.test(normalized)) {
+        setErrorMessage("No account found with this email.");
+      } else {
+        setErrorMessage("Login failed. Please try again later.");
+      }
     }
   };
 
@@ -57,9 +107,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
+          {errorMessage && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
 

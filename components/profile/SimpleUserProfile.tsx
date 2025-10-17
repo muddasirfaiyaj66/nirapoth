@@ -129,7 +129,7 @@ const SimpleUserProfile: React.FC = () => {
               </label>
               <p className="text-lg">
                 {profile.isActive ? "Active" : "Inactive"} •
-                {profile.isVerified ? " Verified" : " Unverified"}
+                {profile.isEmailVerified ? " Verified" : " Unverified"}
               </p>
             </div>
           </div>

@@ -5,8 +5,13 @@ export interface RewardTransaction {
   id: string;
   userId: string;
   amount: number;
-  type: "REWARD" | "PENALTY" | "BONUS" | "DEDUCTION";
-  source: "CITIZEN_REPORT" | "VIOLATION" | "FINE_PAYMENT" | "SYSTEM";
+  type: "REWARD" | "PENALTY" | "BONUS" | "DEDUCTION" | "DEBT_PAYMENT"; // ⭐ Added DEBT_PAYMENT
+  source:
+    | "CITIZEN_REPORT"
+    | "VIOLATION"
+    | "FINE_PAYMENT"
+    | "DEBT_PAYMENT"
+    | "SYSTEM"; // ⭐ Added DEBT_PAYMENT
   relatedReportId?: string;
   relatedViolationId?: string;
   description: string;
@@ -19,6 +24,9 @@ export interface RewardBalance {
   userId: string;
   totalEarned: number;
   totalPenalties: number;
+  totalFinePayments: number; // ⭐ NEW: Fine payments (traffic violations)
+  totalOutstandingDebt: number; // ⭐ Outstanding debt (unpaid)
+  totalDebtPayments: number; // ⭐ Debt payments made
   currentBalance: number;
   pendingRewards: number;
   withdrawableAmount: number;

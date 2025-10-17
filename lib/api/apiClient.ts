@@ -12,9 +12,24 @@ declare module "axios" {
   }
 }
 
+// Validate and set base URL
+const getBaseURL = () => {
+  const baseURL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+
+  // Validate URL format
+  try {
+    new URL(baseURL);
+    return baseURL;
+  } catch (error) {
+    console.error("Invalid API base URL:", baseURL);
+    return "http://localhost:5000/api"; // Fallback
+  }
+};
+
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -66,8 +81,8 @@ apiClient.interceptors.response.use(
   (response) => {
     // Log successful requests in development
     if (process.env.NODE_ENV === "development") {
-      const duration =
-        new Date().getTime() - response.config.metadata?.startTime?.getTime();
+      const startTime = response.config.metadata?.startTime?.getTime();
+      const duration = startTime ? new Date().getTime() - startTime : 0;
       console.log(
         `✅ ${response.config.method?.toUpperCase()} ${
           response.config.url
@@ -120,6 +135,9 @@ apiClient.interceptors.response.use(
         await apiClient.post("/auth/refresh");
         processQueue(null);
         isRefreshing = false;
+
+        // Add a small delay to ensure browser has processed the new cookie
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Retry the original request
         return apiClient(originalRequest);

@@ -61,6 +61,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { AddressSelector } from "@/components/forms/AddressSelector";
 
 export function ProfilePage() {
   const dispatch = useAppDispatch();
@@ -98,11 +99,13 @@ export function ProfilePage() {
     presentCity: "",
     presentDistrict: "",
     presentDivision: "",
+    presentUpazila: "",
     presentPostalCode: "",
     permanentAddress: "",
     permanentCity: "",
     permanentDistrict: "",
     permanentDivision: "",
+    permanentUpazila: "",
     permanentPostalCode: "",
     designation: "",
     badgeNo: "",
@@ -146,11 +149,13 @@ export function ProfilePage() {
         presentCity: profile.presentCity || "",
         presentDistrict: profile.presentDistrict || "",
         presentDivision: profile.presentDivision || "",
+        presentUpazila: profile.presentUpazila || "",
         presentPostalCode: profile.presentPostalCode || "",
         permanentAddress: profile.permanentAddress || "",
         permanentCity: profile.permanentCity || "",
         permanentDistrict: profile.permanentDistrict || "",
         permanentDivision: profile.permanentDivision || "",
+        permanentUpazila: profile.permanentUpazila || "",
         permanentPostalCode: profile.permanentPostalCode || "",
         designation: profile.designation || "",
         badgeNo: profile.badgeNo || "",
@@ -303,6 +308,7 @@ export function ProfilePage() {
       permanentCity: formData.presentCity,
       permanentDistrict: formData.presentDistrict,
       permanentDivision: formData.presentDivision,
+      permanentUpazila: formData.presentUpazila,
       permanentPostalCode: formData.presentPostalCode,
     });
     toast({
@@ -717,7 +723,7 @@ export function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="presentCity">City</Label>
+                      <Label htmlFor="presentCity">City/Upazila</Label>
                       <Input
                         id="presentCity"
                         name="presentCity"
@@ -726,46 +732,35 @@ export function ProfilePage() {
                         disabled={!editing}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="presentDistrict">District</Label>
-                      <Input
-                        id="presentDistrict"
-                        name="presentDistrict"
-                        value={formData.presentDistrict}
-                        onChange={handleInputChange}
+
+                    <div className="md:col-span-2">
+                      <AddressSelector
+                        divisionValue={formData.presentDivision}
+                        districtValue={formData.presentDistrict}
+                        upazilaValue={formData.presentUpazila}
+                        onDivisionChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            presentDivision: id,
+                          });
+                        }}
+                        onDistrictChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            presentDistrict: id,
+                          });
+                        }}
+                        onUpazilaChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            presentUpazila: id,
+                          });
+                        }}
                         disabled={!editing}
+                        showLabels={true}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="presentDivision">Division</Label>
-                      <Select
-                        value={formData.presentDivision}
-                        onValueChange={(value) =>
-                          handleSelectChange("presentDivision", value)
-                        }
-                        disabled={!editing}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select division" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[
-                            "Dhaka",
-                            "Chittagong",
-                            "Rajshahi",
-                            "Khulna",
-                            "Barisal",
-                            "Sylhet",
-                            "Rangpur",
-                            "Mymensingh",
-                          ].map((div) => (
-                            <SelectItem key={div} value={div}>
-                              {div}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="presentPostalCode">Postal Code</Label>
                       <Input
@@ -808,7 +803,7 @@ export function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="permanentCity">City</Label>
+                      <Label htmlFor="permanentCity">City/Upazila</Label>
                       <Input
                         id="permanentCity"
                         name="permanentCity"
@@ -817,46 +812,35 @@ export function ProfilePage() {
                         disabled={!editing}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="permanentDistrict">District</Label>
-                      <Input
-                        id="permanentDistrict"
-                        name="permanentDistrict"
-                        value={formData.permanentDistrict}
-                        onChange={handleInputChange}
+
+                    <div className="md:col-span-2">
+                      <AddressSelector
+                        divisionValue={formData.permanentDivision}
+                        districtValue={formData.permanentDistrict}
+                        upazilaValue={formData.permanentUpazila}
+                        onDivisionChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            permanentDivision: id,
+                          });
+                        }}
+                        onDistrictChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            permanentDistrict: id,
+                          });
+                        }}
+                        onUpazilaChange={(id, name) => {
+                          setFormData({
+                            ...formData,
+                            permanentUpazila: id,
+                          });
+                        }}
                         disabled={!editing}
+                        showLabels={true}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="permanentDivision">Division</Label>
-                      <Select
-                        value={formData.permanentDivision}
-                        onValueChange={(value) =>
-                          handleSelectChange("permanentDivision", value)
-                        }
-                        disabled={!editing}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select division" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[
-                            "Dhaka",
-                            "Chittagong",
-                            "Rajshahi",
-                            "Khulna",
-                            "Barisal",
-                            "Sylhet",
-                            "Rangpur",
-                            "Mymensingh",
-                          ].map((div) => (
-                            <SelectItem key={div} value={div}>
-                              {div}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="permanentPostalCode">Postal Code</Label>
                       <Input
@@ -1046,9 +1030,11 @@ export function ProfilePage() {
                     <div className="flex justify-between">
                       <span>Email Verified:</span>
                       <Badge
-                        variant={profile.isVerified ? "default" : "secondary"}
+                        variant={
+                          profile.isEmailVerified ? "default" : "secondary"
+                        }
                       >
-                        {profile.isVerified ? "Yes" : "No"}
+                        {profile.isEmailVerified ? "Yes" : "No"}
                       </Badge>
                     </div>
                     <div className="flex justify-between">

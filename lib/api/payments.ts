@@ -7,7 +7,7 @@ export interface Payment {
   fineId: string;
   amount: number;
   transactionId?: string;
-  paymentMethod: "CASH" | "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
+  paymentMethod: "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
   paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
   paidAt: string;
   createdAt: string;
@@ -71,7 +71,7 @@ export interface UnpaidFine {
 export interface CreatePaymentData {
   fineId: string;
   amount: number;
-  paymentMethod: "CASH" | "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
+  paymentMethod: "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
   transactionId?: string;
 }
 
@@ -146,5 +146,33 @@ export const paymentApi = {
   // Get payment statistics
   getPaymentStats: async () => {
     return await api.get<PaymentStats>("/payments/stats");
+  },
+
+  // Initialize online payment with SSLCommerz
+  initOnlinePayment: async (data: {
+    fineId?: string;
+    fineIds?: string[];
+    amount: number;
+  }) => {
+    return await api.post<{
+      gatewayPageURL: string;
+      sessionKey: string;
+      transactionId: string;
+    }>("/payments/init-online", data);
+  },
+
+  // Query transaction status
+  queryTransaction: async (transactionId: string) => {
+    return await api.get(`/payments/transaction/${transactionId}`);
+  },
+
+  // Verify transaction against database (authoritative)
+  verifyTransaction: async (transactionId: string) => {
+    return await api.get<{
+      verified: boolean;
+      paymentStatus?: string;
+      fineStatus?: string;
+      reason?: string;
+    }>(`/payments/verify/${transactionId}`);
   },
 };

@@ -109,7 +109,6 @@ interface UserProfile {
 
   // Profile Status
   isActive: boolean;
-  isVerified: boolean;
   isEmailVerified: boolean;
   isBlocked: boolean;
   createdAt: string;
@@ -718,7 +717,7 @@ export function UserProfileManagement() {
         ) : (
           <Badge variant="secondary">Inactive</Badge>
         )}
-        {profile.isVerified ? (
+        {profile.isEmailVerified ? (
           <Badge variant="default" className="bg-green-500">
             Verified
           </Badge>

@@ -5,7 +5,6 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { BangladeshiBackground } from "@/components/bangladeshi-background";
-import { DottedWaveBackground } from "@/components/dotted-wave-background";
 import { ReduxProvider } from "@/lib/providers/ReduxProvider";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,7 +12,6 @@ import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
 import { ErrorBoundaryProvider } from "@/components/providers/ErrorBoundaryProvider";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@vercel/analytics/next";
 
 const exo2 = Exo_2({
   subsets: ["latin"],
@@ -43,7 +41,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground" suppressHydrationWarning>
-        <DottedWaveBackground />
         <ErrorBoundaryProvider>
           <ThemeProvider
             attribute="class"
@@ -61,7 +58,6 @@ export default function RootLayout({
             </ReduxProvider>
           </ThemeProvider>
         </ErrorBoundaryProvider>
-        <Analytics />
       </body>
     </html>
   );

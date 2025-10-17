@@ -9,13 +9,7 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber: string;
-  role:
-    | "ADMIN"
-    | "SUPER_ADMIN"
-    | "POLICE"
-    | "DRIVER"
-    | "FIRE_SERVICE"
-    | "CITIZEN";
+  role: "ADMIN" | "SUPER_ADMIN" | "POLICE" | "FIRE_SERVICE" | "CITIZEN";
   emailVerified: boolean;
   phoneVerified: boolean;
   isBlocked: boolean;

@@ -6,7 +6,6 @@ export type UserRole =
   | "SUPER_ADMIN"
   | "ADMIN"
   | "POLICE"
-  | "DRIVER"
   | "FIRE_SERVICE"
   | "CITIZEN";
 
@@ -16,7 +15,6 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   ADMIN: 80,
   POLICE: 60,
   FIRE_SERVICE: 50,
-  DRIVER: 40,
   CITIZEN: 20,
 };
 
@@ -147,13 +145,11 @@ export function getRoleCapabilities(role: UserRole): string {
     case "SUPER_ADMIN":
       return "Can manage all users including other Super Admins";
     case "ADMIN":
-      return "Can manage Police, Fire Service, Drivers, and Citizens";
+      return "Can manage Police, Fire Service, and Citizens";
     case "POLICE":
-      return "Can manage Drivers and Citizens";
+      return "Can manage Citizens";
     case "FIRE_SERVICE":
       return "Can manage Citizens";
-    case "DRIVER":
-      return "Limited management capabilities";
     case "CITIZEN":
       return "No management capabilities";
     default:

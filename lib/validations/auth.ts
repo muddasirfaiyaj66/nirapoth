@@ -38,16 +38,36 @@ export const registerSchema = z
       .min(10, "Phone number must be at least 10 characters")
       .max(20, "Phone number must not exceed 20 characters"),
 
-    // NID and Birth Certificate are optional at signup; no strict validation here
-    nidNo: z.string().optional().or(z.literal("")),
+    nidNo: z
+      .string()
+      .regex(/^\d{10}$|^\d{17}$/, "NID must be either 10 or 17 digits")
+      .optional()
+      .or(z.literal("")),
 
-    birthCertificateNo: z.string().optional().or(z.literal("")),
+    birthCertificateNo: z
+      .string()
+      .regex(/^\d{17}$/, "Birth Certificate Number must be 17 digits")
+      .optional()
+      .or(z.literal("")),
     role: z.nativeEnum(UserRole).optional().default(UserRole.CITIZEN),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  });
+  })
+  .refine(
+    (data) => {
+      const nidValid = !!data.nidNo && /^\d{10}$|^\d{17}$/.test(data.nidNo);
+      const bcnValid =
+        !!data.birthCertificateNo && /^\d{17}$/.test(data.birthCertificateNo);
+      return nidValid || bcnValid;
+    },
+    {
+      message:
+        "Provide a valid NID (10 or 17 digits) or a valid Birth Certificate Number (17 digits).",
+      path: ["nidNo"],
+    }
+  );
 
 // User login validation schema
 export const loginSchema = z.object({

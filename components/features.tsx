@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Camera,
   Zap,
@@ -6,6 +8,59 @@ import {
   AlertTriangle,
   FileText,
 } from "lucide-react";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+  hover: {
+    y: -8,
+    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+};
+
+const iconVariants = {
+  idle: { scale: 1, rotate: 0 },
+  hover: {
+    scale: 1.2,
+    rotate: 10,
+    transition: { duration: 0.3, ease: "easeOut" },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: "easeOut",
+    },
+  },
+};
 
 export function Features() {
   const features = [
@@ -48,34 +103,58 @@ export function Features() {
   ];
 
   return (
-    <section id="features" className="py-24 bg-card dark:bg-transparent">
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold md:text-5xl text-foreground">
+    <section
+      id="features"
+      className="py-12 sm:py-16 md:py-24 bg-card dark:bg-transparent"
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          className="mb-10 sm:mb-16 text-center"
+          variants={headerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
+          <h2 className="mb-3 sm:mb-4 text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">
             Comprehensive Road Safety Features
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-foreground/70">
+          <p className="mx-auto max-w-2xl text-base sm:text-lg text-foreground/70 px-4 sm:px-0">
             A complete ecosystem for monitoring, enforcement, and citizen
             engagement
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          className="grid gap-4 sm:gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="group rounded-lg border border-border/50 bg-muted/30 p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+              className="group rounded-lg border border-border/50 bg-muted/30 p-5 sm:p-6 transition-all"
+              variants={cardVariants}
+              whileHover="hover"
             >
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <feature.icon className="h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold text-foreground">
+              <motion.div
+                className="mb-3 sm:mb-4 inline-flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                variants={iconVariants}
+                initial="idle"
+                whileHover="hover"
+              >
+                <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+              </motion.div>
+              <h3 className="mb-2 text-lg sm:text-xl font-semibold text-foreground">
                 {feature.title}
               </h3>
-              <p className="text-foreground/70">{feature.description}</p>
-            </div>
+              <p className="text-sm sm:text-base text-foreground/70">
+                {feature.description}
+              </p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

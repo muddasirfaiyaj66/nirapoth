@@ -19,11 +19,13 @@ export interface UserProfile {
   presentCity?: string;
   presentDistrict?: string;
   presentDivision?: string;
+  presentUpazila?: string;
   presentPostalCode?: string;
   permanentAddress?: string;
   permanentCity?: string;
   permanentDistrict?: string;
   permanentDivision?: string;
+  permanentUpazila?: string;
   permanentPostalCode?: string;
   designation?: string;
   badgeNo?: string;
@@ -31,7 +33,7 @@ export interface UserProfile {
   rank?: string;
   specialization?: string;
   role: "CITIZEN" | "POLICE" | "FIRE_SERVICE" | "ADMIN";
-  isVerified: boolean;
+  isEmailVerified: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

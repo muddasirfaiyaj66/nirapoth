@@ -4,9 +4,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export function DashboardHeader({ onMobileMenuToggle }: DashboardHeaderProps) {
   const { user } = useAuth();
   const pathname = usePathname();
 
@@ -27,12 +32,24 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-      <div className="flex flex-1 items-center gap-4">
-        <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
+    <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:px-6">
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden"
+        onClick={onMobileMenuToggle}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      <div className="flex flex-1 items-center gap-2 sm:gap-4">
+        <h1 className="text-base sm:text-xl font-semibold truncate">
+          {getPageTitle()}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <ThemeToggle />
         {user && <NotificationDropdown />}
       </div>

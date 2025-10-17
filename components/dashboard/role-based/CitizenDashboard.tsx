@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   MapPin,
   Camera,
@@ -37,7 +38,9 @@ import {
 interface CitizenDashboardProps {
   user: {
     firstName: string;
+    lastName?: string;
     role: string;
+    profileImage?: string;
     designation?: string;
   };
 }
@@ -141,14 +144,27 @@ export function CitizenDashboard({ user }: CitizenDashboardProps) {
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">
-                Welcome back, {user.firstName}!
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                Help make our roads safer by reporting violations and
-                infrastructure issues.
-              </p>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16 border-2 border-primary/20">
+                <AvatarImage
+                  src={user.profileImage || ""}
+                  alt={user.firstName}
+                  className="object-cover"
+                />
+                <AvatarFallback className="text-lg font-semibold bg-primary/10">
+                  {user.firstName?.charAt(0)?.toUpperCase()}
+                  {user.lastName?.charAt(0)?.toUpperCase() || ""}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-2xl font-bold">
+                  Welcome back, {user.firstName}!
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  Help make our roads safer by reporting violations and
+                  infrastructure issues.
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="px-4 py-2 text-sm">

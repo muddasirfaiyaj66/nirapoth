@@ -28,6 +28,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register: registerUser, isLoading, error } = useAuth();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -44,6 +45,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     const result = await registerUser(data);
     if (result.success) {
       onSuccess?.();
+      setSuccessMessage(
+        "Account created. Please check your email to verify your account before logging in."
+      );
     }
   };
 
@@ -64,15 +68,21 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          {successMessage && (
+            <Alert>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
+                type="text"
                 {...register("firstName")}
                 placeholder="John"
-                disabled={isLoading}
+                disabled={isLoading || !!successMessage}
               />
               {errors.firstName && (
                 <p className="text-sm text-red-500">
@@ -84,9 +94,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
+                type="text"
                 {...register("lastName")}
                 placeholder="Doe"
-                disabled={isLoading}
+                disabled={isLoading || !!successMessage}
               />
               {errors.lastName && (
                 <p className="text-sm text-red-500">
@@ -103,7 +114,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               type="email"
               {...register("email")}
               placeholder="john@example.com"
-              disabled={isLoading}
+              disabled={isLoading || !!successMessage}
             />
             {errors.email && (
               <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -114,16 +125,48 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
+              type="text"
               {...register("phone")}
-              placeholder="+1234567890"
-              disabled={isLoading}
+              placeholder="01XXXXXXXXX"
+              disabled={isLoading || !!successMessage}
             />
             {errors.phone && (
               <p className="text-sm text-red-500">{errors.phone.message}</p>
             )}
           </div>
 
-          {/* NID and Birth Certificate are optional and collected later via profile update; removed from signup form */}
+          <div className="space-y-2">
+            <Label htmlFor="nidNo">National ID (NID)</Label>
+            <Input
+              id="nidNo"
+              type="text"
+              {...register("nidNo")}
+              placeholder="10 or 17 digits"
+              disabled={isLoading || !!successMessage}
+            />
+            {errors.nidNo && (
+              <p className="text-sm text-red-500">{errors.nidNo.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="birthCertificateNo">Birth Certificate No</Label>
+            <Input
+              id="birthCertificateNo"
+              type="text"
+              {...register("birthCertificateNo")}
+              placeholder="17 digits"
+              disabled={isLoading || !!successMessage}
+            />
+            {errors.birthCertificateNo && (
+              <p className="text-sm text-red-500">
+                {errors.birthCertificateNo.message}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Provide either a valid NID or Birth Certificate Number.
+            </p>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -132,8 +175,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
-                placeholder="Enter your password"
-                disabled={isLoading}
+                placeholder="At least 8 characters"
+                disabled={isLoading || !!successMessage}
               />
               <Button
                 type="button"
@@ -162,8 +205,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 {...register("confirmPassword")}
-                placeholder="Confirm your password"
-                disabled={isLoading}
+                placeholder="Re-enter password"
+                disabled={isLoading || !!successMessage}
               />
               <Button
                 type="button"
@@ -187,7 +230,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !!successMessage}
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -197,6 +244,13 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               "Create Account"
             )}
           </Button>
+          {successMessage && (
+            <div className="text-center">
+              <Link href="/login" className="text-primary hover:underline">
+                Go to Login
+              </Link>
+            </div>
+          )}
         </form>
 
         <div className="mt-4 text-center text-sm">

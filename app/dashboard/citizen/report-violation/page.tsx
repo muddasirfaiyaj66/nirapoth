@@ -80,7 +80,7 @@ export default function ReportViolationPage() {
     debugEnvironmentVariables();
   }, []);
 
-  // Get current location
+  // Get current location using browser geolocation API
   const handleGetLocation = () => {
     setGettingLocation(true);
     if (navigator.geolocation) {
@@ -89,7 +89,7 @@ export default function ReportViolationPage() {
           const { latitude, longitude } = position.coords;
           setLocation((prev) => ({ ...prev, latitude, longitude }));
 
-          // Reverse geocode to get address
+          // Reverse geocode using OpenStreetMap Nominatim
           try {
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
@@ -524,12 +524,12 @@ export default function ReportViolationPage() {
               </CardContent>
             </Card>
 
-            {/* Location */}
+            {/* Location Capture */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Location
+                  Location *
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -541,7 +541,10 @@ export default function ReportViolationPage() {
                   className="w-full"
                 >
                   {gettingLocation ? (
-                    <>Getting Location...</>
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Getting Location...
+                    </>
                   ) : location.latitude ? (
                     <>
                       <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />

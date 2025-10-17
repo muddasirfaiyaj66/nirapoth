@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ import {
   Search,
   Filter,
   AlertCircle,
+  Map as MapIcon,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
@@ -46,6 +47,9 @@ import { CitizenReport } from "@/lib/api/citizenReports";
 import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
+import CitizenReportsMapView, {
+  CitizenReportLocation,
+} from "@/components/maps/CitizenReportsMapView";
 
 const STATUS_COLORS = {
   PENDING: "bg-yellow-500",
@@ -75,6 +79,7 @@ export default function MyReportsPage() {
     null
   );
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // Load reports and stats on mount
   useEffect(() => {
@@ -121,6 +126,24 @@ export default function MyReportsPage() {
     setSelectedStatus("all");
     dispatch(clearFilters());
   };
+
+  // Convert reports to map locations
+  const mapLocations: CitizenReportLocation[] = useMemo(() => {
+    return reports
+      .filter(
+        (report) => report.location?.latitude && report.location?.longitude
+      )
+      .map((report) => ({
+        id: report.id,
+        latitude: report.location.latitude,
+        longitude: report.location.longitude,
+        address: report.location.address,
+        vehiclePlate: report.vehiclePlate,
+        violationType: report.violationType,
+        status: report.status,
+        createdAt: report.createdAt,
+      }));
+  }, [reports]);
 
   const getStatusIcon = (status: string) => {
     const Icon = STATUS_ICONS[status as keyof typeof STATUS_ICONS] || Clock;
@@ -250,6 +273,29 @@ export default function MyReportsPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Map View Toggle */}
+      {reports.length > 0 && mapLocations.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            variant={showMap ? "default" : "outline"}
+            onClick={() => setShowMap(!showMap)}
+          >
+            <MapIcon className="h-4 w-4 mr-2" />
+            {showMap ? "Hide Map" : "Show Map"}
+          </Button>
+        </div>
+      )}
+
+      {/* Map View */}
+      {showMap && mapLocations.length > 0 && (
+        <CitizenReportsMapView
+          reports={mapLocations}
+          title="My Reports Map"
+          height="500px"
+          showStats={true}
+        />
       )}
 
       {/* Filters */}

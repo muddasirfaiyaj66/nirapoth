@@ -51,17 +51,41 @@ interface SidebarItem {
   children?: SidebarItem[];
 }
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function DashboardSidebar({
+  isMobileOpen = false,
+  onMobileClose,
+}: DashboardSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
   const getSidebarItems = (): SidebarItem[] => {
+    const dashboardHref = (() => {
+      switch (user?.role) {
+        case "ADMIN":
+        case "SUPER_ADMIN":
+          return "/dashboard/admin";
+        case "POLICE":
+          return "/dashboard/police";
+        case "FIRE_SERVICE":
+          return "/dashboard/fire-service";
+        case "CITY_CORPORATION":
+          return "/dashboard/city-corporation";
+        case "CITIZEN":
+        default:
+          return "/dashboard/citizen";
+      }
+    })();
     const baseItems: SidebarItem[] = [
       {
         id: "dashboard",
         title: "Dashboard",
-        href: "/dashboard",
+        href: dashboardHref,
         icon: LayoutDashboard,
         roles: [
           "ADMIN",
@@ -418,6 +442,13 @@ export function DashboardSidebar() {
             roles: ["CITIZEN"],
           },
           {
+            id: "driving-license",
+            title: "Driving License",
+            href: "/dashboard/citizen/driving-license",
+            icon: Shield,
+            roles: ["CITIZEN"],
+          },
+          {
             id: "my-vehicles",
             title: "My Vehicles",
             href: "/dashboard/citizen/vehicles",
@@ -513,132 +544,161 @@ export function DashboardSidebar() {
     window.location.href = "/";
   };
 
-  return (
-    <div
-      className={cn(
-        "flex h-full flex-col border-r bg-background transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
-      )}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        {!isCollapsed && (
-          <Link href="/">
-            <div className="flex items-center gap-2">
-              <div className=" rounded-lg flex items-center justify-center">
-                <img src="/logo.png" alt="Logo" className="w-10 h-10" />
-              </div>
-              <span className="font-semibold">Nirapoth</span>
-            </div>
-          </Link>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8 p-0"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+  const handleLinkClick = () => {
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
 
-      {/* User Profile */}
-      {!isCollapsed && user && (
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={user.profileImage || ""} alt={user.firstName} />
-              <AvatarFallback>
-                {user.firstName?.charAt(0)?.toUpperCase()}
-                {user.lastName?.charAt(0)?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user.email}
-              </p>
-              <Badge variant="secondary" className="text-xs mt-1">
-                {user.role.replace("_", " ")}
-              </Badge>
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "flex h-full flex-col border-r bg-background transition-all duration-300",
+          "fixed lg:relative inset-y-0 left-0 z-50",
+          isCollapsed ? "w-16" : "w-64",
+          // Mobile responsive classes
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          {!isCollapsed && (
+            <Link href="/" onClick={handleLinkClick}>
+              <div className="flex items-center gap-2">
+                <div className=" rounded-lg flex items-center justify-center">
+                  <img src="/logo.png" alt="Logo" className="w-10 h-10" />
+                </div>
+                <span className="font-semibold">Nirapoth</span>
+              </div>
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 p-0 hidden lg:flex"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
+        {/* User Profile */}
+        {!isCollapsed && user && (
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage
+                  src={user.profileImage || ""}
+                  alt={user.firstName}
+                />
+                <AvatarFallback>
+                  {user.firstName?.charAt(0)?.toUpperCase()}
+                  {user.lastName?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.email}
+                </p>
+                <Badge variant="secondary" className="text-xs mt-1">
+                  {user.role.replace("_", " ")}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2 hide-scrollbar">
-        <div className="space-y-1">
-          {sidebarItems.map((item) => (
-            <div key={item.id}>
-              <Link href={item.href}>
-                <Button
-                  variant={isActive(item.href) ? "secondary" : "ghost"}
-                  className={cn(
-                    "w-full justify-start gap-3 h-10",
-                    isCollapsed && "px-2"
-                  )}
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                </Button>
-              </Link>
-
-              {/* Sub-items */}
-              {item.children && !isCollapsed && (
-                <div className="ml-6 mt-1 space-y-1">
-                  {item.children.map((child) => (
-                    <Link key={child.id} href={child.href}>
-                      <Button
-                        variant={isActive(child.href) ? "secondary" : "ghost"}
-                        className="w-full justify-start gap-3 h-9 text-sm"
-                      >
-                        <child.icon className="h-3 w-3 flex-shrink-0" />
-                        <span className="flex-1 text-left">{child.title}</span>
-                        {child.badge && (
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-2 hide-scrollbar">
+          <div className="space-y-1">
+            {sidebarItems.map((item) => (
+              <div key={item.id}>
+                <Link href={item.href} onClick={handleLinkClick}>
+                  <Button
+                    variant={isActive(item.href) ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-3 h-10",
+                      isCollapsed && "px-2 lg:px-2"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    {!isCollapsed && (
+                      <>
+                        <span className="flex-1 text-left">{item.title}</span>
+                        {item.badge && (
                           <Badge variant="destructive" className="text-xs">
-                            {child.badge}
+                            {item.badge}
                           </Badge>
                         )}
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </nav>
+                      </>
+                    )}
+                  </Button>
+                </Link>
 
-      {/* Footer */}
-      <div className="p-2 border-t">
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start gap-3 h-10 text-red-600 hover:text-red-700 hover:bg-red-50",
-            isCollapsed && "px-2"
-          )}
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
-          {!isCollapsed && <span>Logout</span>}
-        </Button>
+                {/* Sub-items */}
+                {item.children && !isCollapsed && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={child.href}
+                        onClick={handleLinkClick}
+                      >
+                        <Button
+                          variant={isActive(child.href) ? "secondary" : "ghost"}
+                          className="w-full justify-start gap-3 h-9 text-sm"
+                        >
+                          <child.icon className="h-3 w-3 flex-shrink-0" />
+                          <span className="flex-1 text-left">
+                            {child.title}
+                          </span>
+                          {child.badge && (
+                            <Badge variant="destructive" className="text-xs">
+                              {child.badge}
+                            </Badge>
+                          )}
+                        </Button>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-2 border-t">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-3 h-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950",
+              isCollapsed && "px-2"
+            )}
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            {!isCollapsed && <span>Logout</span>}
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

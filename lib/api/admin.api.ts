@@ -171,7 +171,7 @@ export class AdminApiService {
   static async updateUserRole(userId: string, newRole: string) {
     return ApiClient.post(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/update-role`, {
       userId,
-      newRole,
+      role: newRole, // Backend expects 'role', not 'newRole'
     });
   }
 

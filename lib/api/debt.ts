@@ -22,7 +22,7 @@ export interface OutstandingDebt {
 export interface DebtPaymentData {
   debtId: string;
   amount: number;
-  paymentMethod: "CASH" | "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
+  paymentMethod: "CARD" | "BANK_TRANSFER" | "MOBILE_MONEY" | "ONLINE";
   paymentReference?: string;
 }
 

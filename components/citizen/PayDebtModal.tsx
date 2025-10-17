@@ -52,12 +52,9 @@ const paymentSchema = z.object({
     .number()
     .positive("Amount must be greater than 0")
     .min(1, "Minimum payment is ৳1"),
-  paymentMethod: z.enum(
-    ["CASH", "CARD", "BANK_TRANSFER", "MOBILE_MONEY", "ONLINE"],
-    {
-      required_error: "Please select a payment method",
-    }
-  ),
+  paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "MOBILE_MONEY", "ONLINE"], {
+    required_error: "Please select a payment method",
+  }),
   paymentReference: z.string().optional(),
 });
 
@@ -72,7 +69,6 @@ interface PayDebtModalProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "CASH", label: "Cash", icon: Wallet },
   { value: "CARD", label: "Credit/Debit Card", icon: CreditCard },
   { value: "BANK_TRANSFER", label: "Bank Transfer", icon: Building },
   {
@@ -80,7 +76,7 @@ const PAYMENT_METHODS = [
     label: "Mobile Money (bKash/Nagad)",
     icon: Smartphone,
   },
-  { value: "ONLINE", label: "Online Payment", icon: Globe },
+  { value: "ONLINE", label: "Online Payment (SSLCommerz)", icon: Globe },
 ];
 
 export function PayDebtModal({

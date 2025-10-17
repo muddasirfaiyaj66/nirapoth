@@ -162,7 +162,11 @@ export function Header() {
           ) : (
             <>
               <Link href="/login">
-                <Button variant="outline" size="sm" className="hover:bg-primary dark:text-white dark:border-white/60 dark:hover:bg-primary">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hover:bg-primary dark:text-white dark:border-white/60 dark:hover:bg-primary"
+                >
                   Sign In
                 </Button>
               </Link>
@@ -210,6 +214,14 @@ export function Header() {
             >
               Traffic Maps
             </Link>
+
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-muted-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
+            </div>
+
             {isAuthenticated && user ? (
               <div className="border-t border-border pt-4">
                 <div className="flex items-center gap-3 mb-4">

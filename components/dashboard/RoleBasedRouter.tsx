@@ -23,9 +23,9 @@ export function RoleBasedRouter({ children }: RoleBasedRouterProps) {
         ADMIN: "/dashboard/admin",
         SUPER_ADMIN: "/dashboard/admin",
         POLICE: "/dashboard/police",
-        CITIZEN: "/dashboard",
+        CITIZEN: "/dashboard/citizen",
         CITY_CORPORATION: "/dashboard/city-corporation",
-        FIRE_SERVICE: "/dashboard/police", // Fire service uses police dashboard for now
+        FIRE_SERVICE: "/dashboard/fire-service",
       };
 
       const expectedPath = rolePaths[userRole as keyof typeof rolePaths];
@@ -33,7 +33,7 @@ export function RoleBasedRouter({ children }: RoleBasedRouterProps) {
       // If user is on a role-specific dashboard that doesn't match their role, redirect
       if (
         expectedPath &&
-        currentPath.startsWith("/dashboard/") &&
+        currentPath.startsWith("/dashboard") &&
         !currentPath.startsWith(expectedPath)
       ) {
         router.replace(expectedPath);

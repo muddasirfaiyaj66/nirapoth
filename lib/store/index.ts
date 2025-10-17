@@ -18,6 +18,9 @@ import debtSlice from "./slices/debtSlice";
 import accidentsSlice from "./slices/accidentsSlice";
 import speedMonitoringSlice from "./slices/speedMonitoringSlice";
 import analyticsSlice from "./slices/analyticsSlice";
+import citizenAnalyticsSlice from "./slices/citizenAnalyticsSlice";
+import drivingLicenseSlice from "./slices/drivingLicenseSlice";
+import vehicleManagementSlice from "./slices/vehicleManagementSlice";
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +43,9 @@ export const store = configureStore({
     accidents: accidentsSlice,
     speedMonitoring: speedMonitoringSlice,
     analytics: analyticsSlice,
+    citizenAnalytics: citizenAnalyticsSlice,
+    drivingLicense: drivingLicenseSlice,
+    vehicleManagement: vehicleManagementSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
